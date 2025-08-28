@@ -301,11 +301,23 @@ class AttendanceAdmin {
         const banner = document.getElementById('session-code-banner');
         const codeSpan = document.getElementById('banner-session-code');
         const rotationSpan = document.getElementById('banner-next-rotation');
+        const slotIndexSpan = document.getElementById('slot-index');
+        const slotRotationSpan = document.getElementById('slot-rotation');
+        const lastRenderedSpan = document.getElementById('last-rendered');
         
         if (this.currentSession) {
             banner.style.display = 'block';
             codeSpan.textContent = sessionCode;
             rotationSpan.textContent = `Next rotation: ${nextRotation.toLocaleTimeString()}`;
+            if (typeof this.currentSlot !== 'undefined') {
+                slotIndexSpan.textContent = `slot=${this.currentSlot}`;
+            }
+            if (this.currentRotationCode) {
+                slotRotationSpan.textContent = `rot=${this.currentRotationCode}`;
+            }
+            if (typeof this.lastRenderedSlot !== 'undefined') {
+                lastRenderedSpan.textContent = `last=${this.lastRenderedSlot}`;
+            }
         } else {
             banner.style.display = 'none';
         }
@@ -453,8 +465,25 @@ class AttendanceAdmin {
 
     performBoundaryRefresh() {
         if (!this.currentSession || !this.currentSession.active) return;
-        this.generateQRCode();
-        this.refreshLiveAttendance();
+        
+        // Compute current slot and rotation
+        const now = Date.now();
+        const slotMs = 2 * 60 * 1000;
+        const slot = Math.floor(now / slotMs);
+        this.currentSlot = slot;
+        const rotation = this.generateTimeBasedCode(slot);
+        this.currentRotationCode = rotation;
+        
+        // Only re-render if slot changed
+        if (this.lastRenderedSlot !== slot) {
+            this.generateQRCode();
+            this.refreshLiveAttendance();
+            this.lastRenderedSlot = slot;
+        }
+        
+        // Update banner with details each tick
+        const nextRotation = new Date((slot + 1) * slotMs);
+        this.updateSessionBanner(`${this.currentSession.code}-${rotation}`, nextRotation);
         this.showRefreshIndicator();
         console.log('✅ Boundary refresh executed at', new Date().toLocaleTimeString());
     }

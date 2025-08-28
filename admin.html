@@ -21,6 +21,13 @@
                 </div>
                 <div class="session-code-large" id="banner-session-code">No Active Session</div>
                 <div class="next-rotation" id="banner-next-rotation"></div>
+                <div class="next-rotation" id="slot-details" style="margin-top:6px; opacity:0.9;">
+                    <span id="slot-index"></span>
+                    <span> • </span>
+                    <span id="slot-rotation"></span>
+                    <span> • </span>
+                    <span id="last-rendered"></span>
+                </div>
             </div>
         </div>
 
@@ -58,11 +65,11 @@
 
         <!-- QR Code Display -->
         <div id="qr-display" class="card" style="display: none;">
-            <h2>📱 Security-Enhanced QR Code</h2>
+            <h2>📱 Student QR (scan to open check-in)</h2>
             <div class="qr-container">
                 <canvas id="qr-canvas"></canvas>
                 <div class="session-details">
-                    <p><strong>Current Code:</strong> <span id="display-session-code"></span></p>
+                    <p><strong>Session Code (manual entry):</strong> <span id="display-session-code"></span></p>
                     <p><strong>Next Rotation:</strong> <span id="session-expiry"></span></p>
                 </div>
             </div>
