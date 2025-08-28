@@ -438,6 +438,18 @@ class AttendanceApp {
             date: dateKey,
             attendanceData: attendanceData[dateKey][baseSessionCode]
         });
+        
+        // Save to GitHub for cross-device sync
+        if (window.githubStorage) {
+            await window.githubStorage.saveAttendance(
+                baseSessionCode, 
+                studentId, 
+                'checkin', 
+                now.toISOString(),
+                { device: 'mobile', userAgent: navigator.userAgent.substring(0, 50) }
+            );
+        }
+        
         this.showMessage(`✅ Successfully checked in at ${now.toLocaleTimeString()}`, 'success');
         this.loadTodayAttendance();
         

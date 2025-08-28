@@ -362,11 +362,16 @@ class AttendanceAdmin {
         }
     }
 
-    refreshLiveAttendance() {
+    async refreshLiveAttendance() {
         if (!this.currentSession) {
             document.getElementById('live-attendance-list').innerHTML = '<p>No active session</p>';
             this.updateStats(0, 0, '00:00');
             return;
+        }
+        
+        // First try to sync with GitHub
+        if (window.githubStorage) {
+            await window.githubStorage.syncWithGitHub(this.currentSession.code, this.currentSession.date);
         }
         
         const attendanceData = JSON.parse(localStorage.getItem('attendance_data') || '{}');
