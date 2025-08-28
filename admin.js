@@ -193,13 +193,21 @@ class AttendanceAdmin {
         `;
     }
 
-    generateQRCode() {
+    async generateQRCode() {
         if (!this.currentSession) return;
         
         const qrDisplay = document.getElementById('qr-display');
         const canvas = document.getElementById('qr-canvas');
         const sessionCodeSpan = document.getElementById('display-session-code');
         const expirySpan = document.getElementById('session-expiry');
+        
+        // Ensure QRCode library is available
+        try {
+            await this.loadQRCodeLibIfNeeded();
+        } catch (e) {
+            console.error('Failed to load QRCode library:', e);
+            return;
+        }
         
         // Generate time-based rotation code (changes every 2 minutes)
         const now = new Date();
@@ -245,6 +253,29 @@ class AttendanceAdmin {
         console.log(`🎯 QR Code generated: ${this.currentSession.code}-${rotationCode} (expires ${nextRotation.toLocaleTimeString()})`);
         
         // No individual timeouts - master refresh handles this
+    }
+
+    loadQRCodeLibIfNeeded() {
+        return new Promise((resolve, reject) => {
+            if (typeof QRCode !== 'undefined') {
+                resolve();
+                return;
+            }
+            // Attempt to find existing script tag
+            const existing = Array.from(document.scripts).find(s => s.src && s.src.includes('qrcode'));
+            if (existing) {
+                existing.addEventListener('load', () => resolve());
+                existing.addEventListener('error', () => reject(new Error('Existing QRCode script failed to load')));
+                return;
+            }
+            // Inject script dynamically
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load QRCode script'));
+            document.head.appendChild(script);
+        });
     }
 
     generateTimeBasedCode(timeSlot) {
