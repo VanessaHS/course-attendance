@@ -47,8 +47,8 @@ class AttendanceAdmin {
         document.getElementById('anonymous-mode').addEventListener('change', () => this.saveSettings());
         document.getElementById('auto-delete').addEventListener('change', () => this.saveSettings());
         
-        // Start comprehensive auto-refresh system
-        this.startMasterRefresh();
+        // Start boundary-aligned refresh system
+        this.startBoundaryScheduler();
         
         // Add window focus/blur handling for better performance
         this.setupWindowEventHandlers();
@@ -112,8 +112,8 @@ class AttendanceAdmin {
         this.generateQRCode();
         this.refreshLiveAttendance();
         
-        // Start master refresh system for this session
-        this.startMasterRefresh();
+        // Start boundary-aligned refresh system for this session
+        this.startBoundaryScheduler();
         
         this.showMessage('New session created successfully!', 'success');
     }
@@ -158,9 +158,9 @@ class AttendanceAdmin {
                 this.displayCurrentSession();
                 this.generateQRCode();
                 
-                // Start master refresh for existing session
-                this.startMasterRefresh();
-                console.log('🔄 Resumed session with master refresh');
+                // Start boundary-aligned refresh for existing session
+                this.startBoundaryScheduler();
+                console.log('🔄 Resumed session with boundary-aligned refresh');
                 break;
             }
         }
@@ -206,9 +206,19 @@ class AttendanceAdmin {
         const timeSlot = Math.floor(now.getTime() / (2 * 60 * 1000)); // 2-minute intervals
         const rotationCode = this.generateTimeBasedCode(timeSlot);
         
-        // Create URL that includes session code and time-based rotation
+        // Stateless payload embedded in QR
+        const payload = {
+            v: 1,
+            code: this.currentSession.code,
+            date: this.currentSession.date,
+            expiresAt: this.currentSession.expiresAt,
+            rotation: rotationCode,
+            slot: timeSlot,
+            course: this.currentSession.courseName
+        };
+        const payloadB64 = btoa(JSON.stringify(payload));
         const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
-        const qrData = `${baseUrl}?session=${this.currentSession.code}&rotation=${rotationCode}&timestamp=${timeSlot}`;
+        const qrData = `${baseUrl}?p=${encodeURIComponent(payloadB64)}`;
         
         // Generate QR code
         QRCode.toCanvas(canvas, qrData, {
@@ -346,24 +356,35 @@ class AttendanceAdmin {
         document.getElementById('session-duration').textContent = duration;
     }
 
-    startMasterRefresh() {
+    startBoundaryScheduler() {
         // Clear any existing intervals
         this.stopAllRefreshIntervals();
         
-        // Master refresh every 10 seconds for responsiveness
-        this.masterRefreshInterval = setInterval(() => {
-            this.performMasterRefresh();
-        }, 10000);
+        const scheduleNext = () => {
+            if (!this.currentSession || !this.currentSession.active) return;
+            const now = Date.now();
+            const slotMs = 2 * 60 * 1000; // 2 minutes
+            const nextBoundary = Math.ceil(now / slotMs) * slotMs;
+            const delay = Math.max(0, nextBoundary - now + 50); // small buffer
+            
+            this.boundaryTimeout = setTimeout(() => {
+                this.performBoundaryRefresh();
+                scheduleNext();
+            }, delay);
+            
+            // Also refresh attendance every 20s for live view
+            this.liveInterval = setInterval(() => {
+                if (this.currentSession && this.currentSession.active) {
+                    this.refreshLiveAttendance();
+                }
+            }, 20000);
+            
+            // Immediate render
+            setTimeout(() => this.performBoundaryRefresh(), 100);
+            console.log('⏱️ Boundary scheduler armed. Next in', Math.round(delay/1000), 's');
+        };
         
-        // Also perform immediate refresh
-        setTimeout(() => this.performMasterRefresh(), 1000);
-        
-        // Backup mechanism - check every 30 seconds if refresh is still running
-        this.backupCheckInterval = setInterval(() => {
-            this.ensureRefreshIsRunning();
-        }, 30000);
-        
-        console.log('🔄 Master refresh system started (10s intervals + backup monitoring)');
+        scheduleNext();
     }
 
     stopAllRefreshIntervals() {
@@ -388,33 +409,24 @@ class AttendanceAdmin {
             clearInterval(this.backupCheckInterval);
             this.backupCheckInterval = null;
         }
+        if (this.boundaryTimeout) {
+            clearTimeout(this.boundaryTimeout);
+            this.boundaryTimeout = null;
+        }
+        if (this.liveInterval) {
+            clearInterval(this.liveInterval);
+            this.liveInterval = null;
+        }
         
         console.log('🛑 All refresh intervals cleared');
     }
 
-    performMasterRefresh() {
-        if (!this.currentSession || !this.currentSession.active) {
-            console.log('⏹️ No active session - skipping refresh');
-            return;
-        }
-
-        try {
-            console.log('🔄 Performing master refresh...');
-            
-            // Always refresh QR code and banner
-            this.generateQRCode();
-            
-            // Refresh attendance data
-            this.refreshLiveAttendance();
-            
-            // Add visual refresh indicator
-            this.showRefreshIndicator();
-            
-            console.log('✅ Master refresh completed');
-            
-        } catch (error) {
-            console.error('❌ Master refresh error:', error);
-        }
+    performBoundaryRefresh() {
+        if (!this.currentSession || !this.currentSession.active) return;
+        this.generateQRCode();
+        this.refreshLiveAttendance();
+        this.showRefreshIndicator();
+        console.log('✅ Boundary refresh executed at', new Date().toLocaleTimeString());
     }
 
     showRefreshIndicator() {

@@ -525,15 +525,44 @@ class AttendanceApp {
 
 // Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    // Pre-fill session code from URL if present (QR code scan)
+    // Pre-fill from stateless payload in QR if present
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionCode = urlParams.get('session');
-    const rotationCode = urlParams.get('rotation');
+    const payloadB64 = urlParams.get('p');
+    const sessionCode = urlParams.get('session'); // legacy
+    const rotationCode = urlParams.get('rotation'); // legacy
     
-    if (sessionCode) {
+    if (payloadB64) {
+        try {
+            const decoded = JSON.parse(atob(payloadB64));
+            // expected: { v, code, date, expiresAt, rotation, slot, course }
+            if (decoded && decoded.code && decoded.rotation) {
+                const fullCode = `${decoded.code}-${decoded.rotation}`;
+                document.getElementById('session-code').value = fullCode;
+                
+                // Seed local active_sessions so validation works on mobile
+                const activeSessions = JSON.parse(localStorage.getItem('active_sessions') || '{}');
+                activeSessions[decoded.code] = {
+                    code: decoded.code,
+                    courseName: decoded.course || 'Course',
+                    date: decoded.date,
+                    createdAt: new Date().toISOString(),
+                    expiresAt: decoded.expiresAt,
+                    active: true
+                };
+                localStorage.setItem('active_sessions', JSON.stringify(activeSessions));
+                
+                // Also persist payload for debugging/reference
+                sessionStorage.setItem(`payload_session_${decoded.code}`, JSON.stringify(decoded));
+                console.log('Pre-filled from QR payload:', decoded);
+            }
+        } catch (e) {
+            console.warn('Failed to parse QR payload', e);
+        }
+    } else if (sessionCode) {
+        // Legacy support
         const fullCode = rotationCode ? `${sessionCode}-${rotationCode}` : sessionCode;
         document.getElementById('session-code').value = fullCode;
-        console.log('Pre-filled session code from URL:', fullCode);
+        console.log('Pre-filled session code from URL (legacy):', fullCode);
     }
     
     // Add mobile debugging info
