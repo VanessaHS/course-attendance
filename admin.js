@@ -222,14 +222,22 @@ class AttendanceAdmin {
         
         // Create a much shorter URL using just session code and rotation
         const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
-        let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(this.currentSession.courseName)}`;
+        
+        // Shorten course name for QR code (max 15 chars to prevent overflow)
+        const shortCourseName = this.currentSession.courseName.length > 15 
+            ? this.currentSession.courseName.substring(0, 15) 
+            : this.currentSession.courseName;
+            
+        let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(shortCourseName)}`;
         
         // Add sync flag if GitHub is configured (mobile will check localStorage)
         const hasToken = window.githubStorage && window.githubStorage.getToken();
         console.log('🔧 Admin QR Generation Debug:', {
             hasGithubStorage: !!window.githubStorage,
             hasToken: !!hasToken,
-            tokenLength: hasToken ? window.githubStorage.getToken().length : 0
+            tokenLength: hasToken ? window.githubStorage.getToken().length : 0,
+            originalCourseName: this.currentSession.courseName,
+            shortCourseName: shortCourseName
         });
         
         if (hasToken) {
