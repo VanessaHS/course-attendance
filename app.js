@@ -591,6 +591,9 @@ class AttendanceApp {
 
 // Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Version check - remove after testing
+    console.log('🚀 App.js loaded - Version 2025012801');
+    
     // Pre-fill from QR URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const sessionCode = urlParams.get('s');      // session code
