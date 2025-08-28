@@ -608,30 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Version check - remove after testing
     console.log('🚀 App.js loaded - Version 2025012802');
     
-    // Always show version indicator
-    const versionDiv = document.createElement('div');
-    versionDiv.textContent = 'v2025012808';
-    versionDiv.style.cssText = 'position:fixed; bottom:10px; left:10px; background:red; color:white; padding:5px; font-size:10px; z-index:9999;';
-    document.body.appendChild(versionDiv);
-    
-    // Add GitHub test button
-    const testBtn = document.createElement('button');
-    testBtn.textContent = 'Test GitHub';
-    testBtn.style.cssText = 'position:fixed; bottom:50px; left:10px; background:blue; color:white; padding:10px; z-index:9999; border:none; border-radius:4px;';
-    testBtn.onclick = async () => {
-        if (window.githubStorage && window.githubStorage.getToken()) {
-            try {
-                alert('Testing GitHub API...');
-                await window.githubStorage.saveAttendance('TEST123', 'STUDENT001', 'test', new Date().toISOString(), {});
-                alert('✅ GitHub test SUCCESS!');
-            } catch (error) {
-                alert(`❌ GitHub test FAILED: ${error.message}`);
-            }
-        } else {
-            alert('❌ No GitHub token available');
-        }
-    };
-    document.body.appendChild(testBtn);
+    // Clean production version - debug elements removed
     
     // Pre-fill from QR URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -639,99 +616,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const rotationCode = urlParams.get('r');     // rotation code  
     const courseName = urlParams.get('c');       // course name
     const syncFlag = urlParams.get('sync');      // GitHub sync flag
+    const qrToken = urlParams.get('token');      // GitHub token from QR
     const payloadB64 = urlParams.get('p');       // legacy base64 payload
     const legacySession = urlParams.get('session'); // legacy
     const legacyRotation = urlParams.get('rotation'); // legacy
     
-    // If sync flag is present, try to initialize GitHub storage
+    // Initialize GitHub storage with token from QR code
     if (syncFlag === '1' && window.githubStorage) {
-        console.log('🔄 Sync flag detected, initializing GitHub storage...');
-        // Force re-check of localStorage token
-        const token = localStorage.getItem('github_token');
-        // Create visible debug display for mobile
-        const debugDiv = document.createElement('div');
-        debugDiv.style.cssText = `
-            position: fixed; top: 50px; left: 10px; right: 10px;
-            background: #000; color: #0f0; padding: 15px;
-            font-family: monospace; font-size: 11px;
-            border: 2px solid #0f0; border-radius: 8px;
-            z-index: 9999; max-height: 200px; overflow-y: auto;
-        `;
-        
-        const debugInfo = {
-            syncFlag,
-            hasGithubStorage: !!window.githubStorage,
-            tokenExists: !!token,
-            tokenLength: token ? token.length : 0,
-            allLocalStorageKeys: Object.keys(localStorage),
-            currentDomain: window.location.hostname,
-            currentURL: window.location.href
-        };
-        
-        debugDiv.innerHTML = `
-            <strong>🔍 MOBILE DEBUG INFO:</strong><br>
-            Sync Flag: ${debugInfo.syncFlag}<br>
-            GitHub Storage: ${debugInfo.hasGithubStorage}<br>
-            Token Exists: ${debugInfo.tokenExists}<br>
-            Token Length: ${debugInfo.tokenLength}<br>
-            Domain: ${debugInfo.currentDomain}<br>
-            LocalStorage Keys: ${debugInfo.allLocalStorageKeys.join(', ')}<br>
-            <button onclick="this.parentNode.remove()" style="margin-top:10px; background:#0f0; color:#000; border:none; padding:5px;">Close</button>
-        `;
-        
-        document.body.appendChild(debugDiv);
-        
-        console.log('🔍 Debug localStorage check:', debugInfo);
-        
-        if (token) {
-            window.githubStorage.setToken(token);
-            console.log('✅ GitHub token found and set for mobile');
+        if (qrToken) {
+            // Use token directly from QR code
+            window.githubStorage.setToken(qrToken);
+            console.log('✅ GitHub token loaded from QR code');
         } else {
-            console.log('⚠️ Sync flag present but no GitHub token in localStorage');
-            // Offer manual token entry
-            const manualToken = prompt('GitHub sync not available. Enter GitHub token manually (or Cancel for local-only mode):');
-            if (manualToken && manualToken.trim()) {
-                window.githubStorage.setToken(manualToken.trim());
-                console.log('✅ Manual GitHub token set for mobile');
+            // Fallback to localStorage
+            const storedToken = localStorage.getItem('github_token');
+            if (storedToken) {
+                window.githubStorage.setToken(storedToken);
+                console.log('✅ GitHub token loaded from localStorage');
             } else {
-                console.log('📱 User chose local-only mode');
+                console.log('⚠️ No GitHub token available - using local-only mode');
             }
         }
     }
     
-    // Always show URL debug info (visible on mobile)
-    const urlDebugDiv = document.createElement('div');
-    urlDebugDiv.style.cssText = `
-        position: fixed; top: 50px; left: 10px; right: 10px;
-        background: #003; color: #fff; padding: 10px;
-        font-family: monospace; font-size: 10px;
-        border: 1px solid #fff; border-radius: 4px;
-        z-index: 9998; word-break: break-all;
-    `;
+    // Debug info removed for production
     
-    urlDebugDiv.innerHTML = `
-        <strong>📱 URL DEBUG:</strong><br>
-        Full URL: ${window.location.href}<br>
-        Session: ${sessionCode || 'NONE'}<br>
-        Rotation: ${rotationCode || 'NONE'}<br>
-        Course: ${courseName || 'NONE'}<br>
-        Sync Flag: ${syncFlag || 'NONE'}<br>
-        <button onclick="this.remove()" style="margin-top:5px; background:#fff; color:#000; border:none; padding:3px;">Close</button>
-    `;
-    
-    document.body.appendChild(urlDebugDiv);
-    
-    // Debug: Log what we received from QR scan
-    console.log('📱 QR Scan Debug:', {
-        url: window.location.href,
-        sessionCode,
-        rotationCode,
-        courseName,
-        syncFlag,
-        payloadB64,
-        legacySession,
-        legacyRotation
-    });
+    // Production version - debug logging removed
     
     // Check GitHub token status and show indicator (after token initialization)
     function updateGitHubStatus() {
