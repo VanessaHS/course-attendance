@@ -230,27 +230,45 @@ class AttendanceAdmin {
             studentLink.textContent = qrData;
         }
 
-        // Use local QR generator (no external dependencies)
-        console.log('🔄 Generating QR code with local generator...');
+        // Generate proper scannable QR code
+        console.log('🔄 Generating scannable QR code...');
         try {
-            if (typeof SimpleQR !== 'undefined') {
-                SimpleQR.generate(canvas, qrData, {
+            // Clear any existing QR code
+            const qrContainer = canvas.parentElement;
+            qrContainer.innerHTML = '<canvas id="qr-canvas" style="border: 2px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></canvas><p style="color: #666; font-size: 12px; margin: 0;">Scannable QR Code</p>';
+            
+            // Create new QR code using the embedded library
+            if (typeof QRCode !== 'undefined') {
+                const qrDiv = document.createElement('div');
+                qrDiv.style.textAlign = 'center';
+                
+                new QRCode(qrDiv, {
+                    text: qrData,
                     width: 200,
-                    margin: 2,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
+                    height: 200,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRErrorCorrectLevel.M
                 });
-                console.log('✅ QR code rendered with local generator');
+                
+                // Replace the canvas with the generated QR code
+                const newCanvas = qrDiv.querySelector('canvas');
+                if (newCanvas) {
+                    newCanvas.id = 'qr-canvas';
+                    newCanvas.style.border = '2px solid #ddd';
+                    newCanvas.style.borderRadius = '8px';
+                    newCanvas.style.marginBottom = '10px';
+                    qrContainer.replaceChild(newCanvas, qrContainer.querySelector('canvas'));
+                }
+                
+                console.log('✅ Scannable QR code generated successfully');
             } else {
-                throw new Error('SimpleQR not available');
+                throw new Error('QRCode library not available');
             }
         } catch (e) {
-            console.warn('❌ Local QR generator failed, using link fallback:', e);
+            console.warn('❌ QR code generation failed, using fallback:', e);
             const ctx = canvas.getContext && canvas.getContext('2d');
             if (ctx) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 canvas.width = 200;
                 canvas.height = 200;
                 ctx.fillStyle = '#f0f0f0';
@@ -258,8 +276,13 @@ class AttendanceAdmin {
                 ctx.fillStyle = '#333';
                 ctx.font = '14px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('QR Code not available', 100, 90);
-                ctx.fillText('Use Student Link below', 100, 110);
+                ctx.fillText('QR Code Generator', 100, 85);
+                ctx.fillText('Not Available', 100, 105);
+                ctx.fillText('Use Student Link below', 100, 125);
+                
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(10, 10, 180, 180);
             }
         }
         
