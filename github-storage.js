@@ -103,9 +103,26 @@ class GitHubStorage {
             
         } catch (error) {
             console.error('❌ Failed to save attendance to GitHub:', error);
+            console.error('Error details:', {
+                message: error.message,
+                status: error.status,
+                statusText: error.statusText,
+                url: error.url || 'unknown',
+                stack: error.stack
+            });
+            
+            // Show user-friendly error
+            if (error.message.includes('403') || error.message.includes('Forbidden')) {
+                console.error('🔒 GitHub token permissions issue - check token has "repo" access');
+            } else if (error.message.includes('404')) {
+                console.error('📁 Repository not found - check owner/repo names');
+            } else if (error.message.includes('401')) {
+                console.error('🔑 GitHub token invalid or expired');
+            }
+            
             // Fall back to localStorage
             this.saveToLocalStorage(sessionCode, studentId, action, timestamp, additionalData);
-            return false;
+            throw error; // Re-throw so mobile can show the error
         }
     }
     
