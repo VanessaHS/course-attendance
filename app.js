@@ -592,7 +592,13 @@ class AttendanceApp {
 // Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     // Version check - remove after testing
-    console.log('🚀 App.js loaded - Version 2025012801');
+    console.log('🚀 App.js loaded - Version 2025012802');
+    
+    // Always show version indicator
+    const versionDiv = document.createElement('div');
+    versionDiv.textContent = 'v2025012802';
+    versionDiv.style.cssText = 'position:fixed; bottom:10px; left:10px; background:red; color:white; padding:5px; font-size:10px; z-index:9999;';
+    document.body.appendChild(versionDiv);
     
     // Pre-fill from QR URL parameters
     const urlParams = new URLSearchParams(window.location.search);
