@@ -610,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Always show version indicator
     const versionDiv = document.createElement('div');
-    versionDiv.textContent = 'v2025012807';
+    versionDiv.textContent = 'v2025012808';
     versionDiv.style.cssText = 'position:fixed; bottom:10px; left:10px; background:red; color:white; padding:5px; font-size:10px; z-index:9999;';
     document.body.appendChild(versionDiv);
     

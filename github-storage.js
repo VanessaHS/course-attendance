@@ -76,7 +76,10 @@ class GitHubStorage {
                 };
             }
             
-            // Add/update student record
+            // Ensure students object exists and add/update student record
+            if (!existingData.students || typeof existingData.students !== 'object') {
+                existingData.students = {};
+            }
             if (!existingData.students[studentId]) {
                 existingData.students[studentId] = {};
             }
