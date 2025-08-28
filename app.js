@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Always show version indicator
     const versionDiv = document.createElement('div');
-    versionDiv.textContent = 'v2025012802';
+    versionDiv.textContent = 'v2025012803';
     versionDiv.style.cssText = 'position:fixed; bottom:10px; left:10px; background:red; color:white; padding:5px; font-size:10px; z-index:9999;';
     document.body.appendChild(versionDiv);
     
@@ -666,12 +666,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // Always show URL debug info (visible on mobile)
+    const urlDebugDiv = document.createElement('div');
+    urlDebugDiv.style.cssText = `
+        position: fixed; top: 50px; left: 10px; right: 10px;
+        background: #003; color: #fff; padding: 10px;
+        font-family: monospace; font-size: 10px;
+        border: 1px solid #fff; border-radius: 4px;
+        z-index: 9998; word-break: break-all;
+    `;
+    
+    urlDebugDiv.innerHTML = `
+        <strong>📱 URL DEBUG:</strong><br>
+        Full URL: ${window.location.href}<br>
+        Session: ${sessionCode || 'NONE'}<br>
+        Rotation: ${rotationCode || 'NONE'}<br>
+        Course: ${courseName || 'NONE'}<br>
+        Sync Flag: ${syncFlag || 'NONE'}<br>
+        <button onclick="this.remove()" style="margin-top:5px; background:#fff; color:#000; border:none; padding:3px;">Close</button>
+    `;
+    
+    document.body.appendChild(urlDebugDiv);
+    
     // Debug: Log what we received from QR scan
     console.log('📱 QR Scan Debug:', {
         url: window.location.href,
         sessionCode,
         rotationCode,
         courseName,
+        syncFlag,
         payloadB64,
         legacySession,
         legacyRotation
