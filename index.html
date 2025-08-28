@@ -18,7 +18,7 @@
             
             <div class="form-group">
                 <label for="student-id">Student ID Number:</label>
-                <input type="text" id="student-id" placeholder="Enter your Student ID number" required pattern="[0-9A-Za-z]+" title="Please enter a valid Student ID">
+                <input type="text" id="student-id" placeholder="Enter your Student ID number" required autocomplete="off" inputmode="text">
                 <small class="privacy-note">
                     🎓 Enter your official Student ID number. This will be used for attendance records.
                 </small>
@@ -26,7 +26,7 @@
 
             <div class="form-group">
                 <label for="session-code">Session Code:</label>
-                <input type="text" id="session-code" placeholder="Enter today's session code" required>
+                <input type="text" id="session-code" placeholder="Enter today's session code" required autocomplete="off" inputmode="text" style="text-transform: uppercase;">
                 <small>Get this code from your instructor or scan the QR code displayed in class</small>
             </div>
 
@@ -63,6 +63,15 @@
             <div id="attendance-summary">
                 <p>No check-ins recorded for today</p>
             </div>
+        </div>
+
+        <!-- Mobile Debug Info (hidden by default) -->
+        <div class="card" id="debug-info" style="display: none;">
+            <h3>📱 Mobile Debug Info</h3>
+            <div id="debug-content">
+                <p>Click "Show Debug" if you're having issues on mobile</p>
+            </div>
+            <button id="toggle-debug-btn" class="btn btn-outline">🔍 Show Debug Info</button>
         </div>
 
         <footer>

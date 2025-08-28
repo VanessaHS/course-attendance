@@ -49,6 +49,9 @@ class AttendanceAdmin {
         
         // Auto-refresh every 30 seconds when session is active
         this.startAutoRefresh();
+        
+        // Auto-refresh QR code and session banner every 20 seconds
+        this.startQRRefresh();
     }
 
     generateSessionCode() {
@@ -132,6 +135,14 @@ class AttendanceAdmin {
             document.getElementById('qr-display').style.display = 'none';
             // Hide the session banner
             document.getElementById('session-code-banner').style.display = 'none';
+            
+            // Clear QR refresh intervals
+            if (this.qrRefreshInterval) {
+                clearTimeout(this.qrRefreshInterval);
+            }
+            if (this.qrAutoRefreshInterval) {
+                clearInterval(this.qrAutoRefreshInterval);
+            }
             
             this.showMessage('Session ended successfully', 'info');
         }
@@ -345,6 +356,15 @@ class AttendanceAdmin {
         }, 30000); // Refresh every 30 seconds
     }
 
+    startQRRefresh() {
+        // Refresh QR code and session banner every 20 seconds
+        this.qrAutoRefreshInterval = setInterval(() => {
+            if (this.currentSession && this.currentSession.active) {
+                this.generateQRCode();
+            }
+        }, 20000); // Refresh every 20 seconds
+    }
+
     loadAttendanceHistory() {
         const selectedDate = document.getElementById('history-date').value;
         if (!selectedDate) {
@@ -553,14 +573,7 @@ class AttendanceAdmin {
     }
 }
 
-// Pre-fill session code from URL if present
+// Initialize admin panel
 document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const sessionCode = urlParams.get('session');
-    
-    if (sessionCode) {
-        document.getElementById('session-code').value = sessionCode;
-    }
-    
     new AttendanceAdmin();
 });

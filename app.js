@@ -17,11 +17,75 @@ class AttendanceApp {
     }
 
     setupEventListeners() {
-        document.getElementById('check-in-btn').addEventListener('click', () => this.checkIn());
-        document.getElementById('check-out-btn').addEventListener('click', () => this.checkOut());
+        const checkInBtn = document.getElementById('check-in-btn');
+        const checkOutBtn = document.getElementById('check-out-btn');
+        
+        // Add both click and touchstart for better mobile support
+        checkInBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.checkIn();
+        });
+        
+        checkOutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.checkOut();
+        });
+        
+        // Also handle Enter key press in form fields
+        document.getElementById('student-id').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('session-code').focus();
+            }
+        });
+        
+        document.getElementById('session-code').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.checkIn();
+            }
+        });
+        
+        // Debug toggle button
+        document.getElementById('toggle-debug-btn').addEventListener('click', () => {
+            this.toggleDebugInfo();
+        });
         
         // Auto-refresh attendance summary every 30 seconds
         setInterval(() => this.loadTodayAttendance(), 30000);
+    }
+
+    toggleDebugInfo() {
+        const debugInfo = document.getElementById('debug-info');
+        const debugContent = document.getElementById('debug-content');
+        const toggleBtn = document.getElementById('toggle-debug-btn');
+        
+        if (debugInfo.style.display === 'none') {
+            debugInfo.style.display = 'block';
+            toggleBtn.textContent = '🙈 Hide Debug Info';
+            
+            // Update debug content
+            const debugData = {
+                'Browser': navigator.userAgent,
+                'Screen Size': `${screen.width}x${screen.height}`,
+                'Viewport': `${window.innerWidth}x${window.innerHeight}`,
+                'Touch Support': 'ontouchstart' in window ? 'Yes' : 'No',
+                'Local Storage': typeof Storage !== "undefined" ? 'Available' : 'Not Available',
+                'Current URL': window.location.href,
+                'Timestamp': new Date().toLocaleString()
+            };
+            
+            let debugHTML = '<div style="font-family: monospace; font-size: 12px;">';
+            Object.entries(debugData).forEach(([key, value]) => {
+                debugHTML += `<p><strong>${key}:</strong> ${value}</p>`;
+            });
+            debugHTML += '</div>';
+            
+            debugContent.innerHTML = debugHTML;
+        } else {
+            debugInfo.style.display = 'none';
+            toggleBtn.textContent = '🔍 Show Debug Info';
+        }
     }
 
     showMessage(message, type = 'info') {
@@ -30,10 +94,16 @@ class AttendanceApp {
         messageDiv.className = `status-message ${type}`;
         messageDiv.style.display = 'block';
         
-        // Auto-hide after 5 seconds
+        // Scroll message into view for mobile
+        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        // Also log to console for debugging
+        console.log(`Attendance App [${type}]: ${message}`);
+        
+        // Auto-hide after 7 seconds (longer for mobile users)
         setTimeout(() => {
             messageDiv.style.display = 'none';
-        }, 5000);
+        }, 7000);
     }
 
     validateInputs() {
@@ -134,12 +204,25 @@ class AttendanceApp {
     }
 
     checkIn() {
-        const inputs = this.validateInputs();
-        if (!inputs) return;
-        
-        const { studentId, sessionCode } = inputs;
-        const session = this.validateSession(sessionCode);
-        if (!session) return;
+        try {
+            console.log('Check-in attempt started');
+            
+            const inputs = this.validateInputs();
+            if (!inputs) {
+                console.log('Input validation failed');
+                return;
+            }
+            
+            console.log('Inputs validated:', inputs);
+            
+            const { studentId, sessionCode } = inputs;
+            const session = this.validateSession(sessionCode);
+            if (!session) {
+                console.log('Session validation failed');
+                return;
+            }
+            
+            console.log('Session validated:', session);
         
         // Get attendance data
         const attendanceData = JSON.parse(localStorage.getItem('attendance_data'));
@@ -175,8 +258,14 @@ class AttendanceApp {
         
         localStorage.setItem('attendance_data', JSON.stringify(attendanceData));
         
+        console.log('Check-in successful');
         this.showMessage(`✅ Successfully checked in at ${now.toLocaleTimeString()}`, 'success');
         this.loadTodayAttendance();
+        
+        } catch (error) {
+            console.error('Check-in error:', error);
+            this.showMessage(`Error during check-in: ${error.message}. Please try again.`, 'error');
+        }
     }
 
     checkOut() {
@@ -295,5 +384,24 @@ class AttendanceApp {
 
 // Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Pre-fill session code from URL if present (QR code scan)
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionCode = urlParams.get('session');
+    const rotationCode = urlParams.get('rotation');
+    
+    if (sessionCode) {
+        const fullCode = rotationCode ? `${sessionCode}-${rotationCode}` : sessionCode;
+        document.getElementById('session-code').value = fullCode;
+        console.log('Pre-filled session code from URL:', fullCode);
+    }
+    
+    // Add mobile debugging info
+    console.log('Device info:', {
+        userAgent: navigator.userAgent,
+        viewport: `${window.innerWidth}x${window.innerHeight}`,
+        touchSupport: 'ontouchstart' in window,
+        localStorage: typeof Storage !== "undefined"
+    });
+    
     new AttendanceApp();
 });
