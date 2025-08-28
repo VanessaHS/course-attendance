@@ -249,6 +249,11 @@ class AttendanceAdmin {
         this.updateSessionBanner(`${combinedCode}`, nextRotation);
         
         qrDisplay.style.display = 'block';
+        const studentLink = document.getElementById('student-link');
+        if (studentLink) {
+            studentLink.href = qrData;
+            studentLink.textContent = qrData;
+        }
         
         // Log QR code generation for debugging
         console.log(`🎯 QR Code generated: ${combinedCode} (expires ${nextRotation.toLocaleTimeString()})`);
