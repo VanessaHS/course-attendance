@@ -65,13 +65,33 @@
 
         <!-- QR Code Display -->
         <div id="qr-display" class="card" style="display: none;">
-            <h2>📱 Student QR (scan to open check-in)</h2>
+            <h2>📱 Student Check-In Access</h2>
             <div class="qr-container">
-                <canvas id="qr-canvas"></canvas>
+                <div style="text-align: center;">
+                    <canvas id="qr-canvas" style="border: 2px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></canvas>
+                    <p style="color: #666; font-size: 12px; margin: 0;">QR-like visual pattern</p>
+                </div>
                 <div class="session-details">
                     <p><strong>Session Code (manual entry):</strong> <span id="display-session-code"></span></p>
                     <p><strong>Next Rotation:</strong> <span id="session-expiry"></span></p>
-                    <p><strong>Student Link:</strong> <a id="student-link" href="#" target="_blank" rel="noopener">Loading...</a></p>
+                    
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <h4 style="margin: 0 0 10px 0; color: #2e7d32;">📲 For Students - Click this link:</h4>
+                        <a id="student-link" href="#" target="_blank" rel="noopener" style="
+                            display: block; 
+                            background: #4CAF50; 
+                            color: white; 
+                            padding: 15px; 
+                            text-decoration: none; 
+                            border-radius: 6px; 
+                            font-weight: bold;
+                            text-align: center;
+                            font-size: 16px;
+                        ">📱 OPEN CHECK-IN PAGE</a>
+                        <p style="margin: 10px 0 0 0; font-size: 12px; color: #555;">
+                            Share this link via text message, email, or have students type the URL
+                        </p>
+                    </div>
                 </div>
             </div>
             <div class="security-info">
