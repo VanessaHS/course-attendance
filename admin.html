@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Attendance - Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Prominent Session Code Display -->
+        <div id="session-code-banner" class="session-banner" style="display: none;">
+            <div class="current-code-display">
+                <h2>Current Session Code:</h2>
+                <div class="session-code-large" id="banner-session-code">No Active Session</div>
+                <div class="next-rotation" id="banner-next-rotation"></div>
+            </div>
+        </div>
+
+        <header>
+            <h1>🎓 Admin Panel - Course Attendance</h1>
+            <p>Manage sessions and view attendance records</p>
+        </header>
+
+        <!-- Session Management -->
+        <div class="card">
+            <h2>📝 Session Management</h2>
+            
+            <div class="form-group">
+                <label for="course-name">Course Name:</label>
+                <input type="text" id="course-name" placeholder="e.g., CS 101 - Introduction to Computer Science">
+            </div>
+
+            <div class="form-group">
+                <label for="session-date">Session Date:</label>
+                <input type="date" id="session-date">
+            </div>
+
+            <div class="button-group">
+                <button id="generate-session-btn" class="btn btn-primary">🎯 Generate New Session</button>
+                <button id="end-session-btn" class="btn btn-danger">⏹️ End Current Session</button>
+            </div>
+
+            <div id="current-session" class="session-display">
+                <h3>Current Session</h3>
+                <div id="session-info">
+                    <p>No active session</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code Display -->
+        <div id="qr-display" class="card" style="display: none;">
+            <h2>📱 Security-Enhanced QR Code</h2>
+            <div class="qr-container">
+                <canvas id="qr-canvas"></canvas>
+                <div class="session-details">
+                    <p><strong>Current Code:</strong> <span id="display-session-code"></span></p>
+                    <p><strong>Next Rotation:</strong> <span id="session-expiry"></span></p>
+                </div>
+            </div>
+            <div class="security-info">
+                <h4>🔒 Security Features Active:</h4>
+                <ul>
+                    <li>🔄 <strong>Auto-Rotating:</strong> Code changes every 2 minutes</li>
+                    <li>🎓 <strong>Student ID Required:</strong> Official Student ID numbers for tracking</li>
+                    <li>⏰ <strong>Minimum Stay:</strong> Students must wait 5 minutes before checking out</li>
+                    <li>🎯 <strong>Real-time Validation:</strong> Screenshots won't work for check-out</li>
+                </ul>
+            </div>
+            <p class="instruction"><strong>Display this screen in your classroom.</strong> Students cannot use screenshots to check out remotely.</p>
+        </div>
+
+        <!-- Live Attendance -->
+        <div class="card">
+            <h2>👥 Live Attendance</h2>
+            <div class="stats-row">
+                <div class="stat-box">
+                    <h3 id="total-checked-in">0</h3>
+                    <p>Currently Present</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="total-today">0</h3>
+                    <p>Total Today</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="session-duration">00:00</h3>
+                    <p>Session Duration</p>
+                </div>
+            </div>
+            
+            <div id="live-attendance-list" class="attendance-list">
+                <p>No students checked in yet</p>
+            </div>
+
+            <div class="button-group">
+                <button id="refresh-btn" class="btn btn-outline">🔄 Refresh</button>
+                <button id="manual-checkout-btn" class="btn btn-warning">🔓 Manual Check-out</button>
+            </div>
+            
+            <div id="manual-checkout-form" class="manual-checkout" style="display: none;">
+                <h4>Manual Student Check-out</h4>
+                <p>Use this to check out students who forgot or had technical issues.</p>
+                <div class="form-group">
+                    <label for="checkout-student-id">Student Identifier:</label>
+                    <input type="text" id="checkout-student-id" placeholder="Enter student identifier">
+                </div>
+                <div class="button-group">
+                    <button id="confirm-manual-checkout" class="btn btn-danger">✅ Confirm Check-out</button>
+                    <button id="cancel-manual-checkout" class="btn btn-outline">❌ Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance History -->
+        <div class="card">
+            <h2>📈 Attendance History</h2>
+            
+            <div class="form-group">
+                <label for="history-date">Select Date:</label>
+                <input type="date" id="history-date">
+                <button id="load-history-btn" class="btn btn-outline">📊 Load History</button>
+            </div>
+
+            <div id="attendance-history">
+                <p>Select a date to view attendance history</p>
+            </div>
+        </div>
+
+        <!-- Data Management -->
+        <div class="card">
+            <h2>💾 Data Management</h2>
+            
+            <div class="button-group">
+                <button id="export-btn" class="btn btn-success">📤 Export Data (CSV)</button>
+                <button id="clear-data-btn" class="btn btn-warning">🗑️ Clear Old Data</button>
+            </div>
+
+            <div class="privacy-section">
+                <h3>🔒 Privacy Settings</h3>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="anonymous-mode">
+                    Allow anonymous check-ins (students can use nicknames)
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="auto-delete">
+                    Auto-delete data after 90 days
+                </label>
+            </div>
+        </div>
+
+        <footer>
+            <p>🔒 Privacy Protected | ⚡ Zero Cost Solution</p>
+            <a href="index.html" class="admin-link">← Back to Student Interface</a>
+        </footer>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
