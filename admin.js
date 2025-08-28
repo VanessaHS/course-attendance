@@ -230,28 +230,36 @@ class AttendanceAdmin {
             studentLink.textContent = qrData;
         }
 
-        // Ensure QRCode library is available, then try to render QR
-        console.log('🔄 Attempting to load QR library...');
+        // Use local QR generator (no external dependencies)
+        console.log('🔄 Generating QR code with local generator...');
         try {
-            await this.loadQRCodeLibIfNeeded();
-            console.log('✅ QR library loaded, generating QR code...');
-            // Generate QR code
-            QRCode.toCanvas(canvas, qrData, {
-                width: 200,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                }
-            });
-            console.log('✅ QR code rendered to canvas');
+            if (typeof SimpleQR !== 'undefined') {
+                SimpleQR.generate(canvas, qrData, {
+                    width: 200,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                });
+                console.log('✅ QR code rendered with local generator');
+            } else {
+                throw new Error('SimpleQR not available');
+            }
         } catch (e) {
-            console.warn('❌ QR unavailable, using link fallback only:', e);
+            console.warn('❌ Local QR generator failed, using link fallback:', e);
             const ctx = canvas.getContext && canvas.getContext('2d');
             if (ctx) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                canvas.width = 200;
+                canvas.height = 200;
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(0, 0, 200, 200);
+                ctx.fillStyle = '#333';
                 ctx.font = '14px sans-serif';
-                ctx.fillText('QR unavailable; use the Student Link below', 10, 30);
+                ctx.textAlign = 'center';
+                ctx.fillText('QR Code not available', 100, 90);
+                ctx.fillText('Use Student Link below', 100, 110);
             }
         }
         
@@ -272,67 +280,7 @@ class AttendanceAdmin {
         // No individual timeouts - master refresh handles this
     }
 
-    loadQRCodeLibIfNeeded() {
-        return new Promise((resolve, reject) => {
-            if (typeof QRCode !== 'undefined') {
-                console.log('📦 QRCode already available');
-                resolve();
-                return;
-            }
-            console.log('📦 Loading QRCode library...');
-            const sources = [
-                'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
-                'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js',
-                // Fallback to a common CDNJS path if available in the future
-                'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js'
-            ];
-            const tryNext = (idx) => {
-                if (typeof QRCode !== 'undefined') { 
-                    console.log('✅ QRCode now available');
-                    resolve(); 
-                    return; 
-                }
-                if (idx >= sources.length) {
-                    console.error('❌ All QRCode CDNs failed');
-                    reject(new Error('All QRCode CDNs failed'));
-                    return;
-                }
-                const url = sources[idx] + `?v=${Date.now()}`;
-                console.log(`📦 Trying QRCode source ${idx + 1}/${sources.length}: ${url}`);
-                const script = document.createElement('script');
-                script.src = url;
-                script.async = true;
-                script.crossOrigin = 'anonymous';
-                script.onload = () => {
-                    console.log(`✅ Script loaded from ${url}`);
-                    // Give the browser a tick to register global
-                    setTimeout(() => {
-                        if (typeof QRCode !== 'undefined') {
-                            console.log('✅ QRCode global now available');
-                            resolve();
-                        } else {
-                            console.warn(`❌ Script loaded but QRCode not defined from ${url}`);
-                            tryNext(idx + 1);
-                        }
-                    }, 100);
-                };
-                script.onerror = () => {
-                    console.error(`❌ Script failed to load from ${url}`);
-                    // Try next source
-                    tryNext(idx + 1);
-                };
-                document.head.appendChild(script);
-                // Also set a timeout in case onerror doesn't fire
-                setTimeout(() => {
-                    if (typeof QRCode === 'undefined') {
-                        console.warn(`⏰ Timeout loading from ${url}, trying next...`);
-                        tryNext(idx + 1);
-                    }
-                }, 5000);
-            };
-            tryNext(0);
-        });
-    }
+    // Removed external QR library loading - now using local SimpleQR generator
 
     generateVisualCode(baseCode, slot) {
         // Deterministic 6-char code based on baseCode and slot
