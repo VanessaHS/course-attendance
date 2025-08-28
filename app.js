@@ -595,6 +595,26 @@ document.addEventListener('DOMContentLoaded', () => {
         legacyRotation
     });
     
+    // Mobile-friendly debug display
+    const debugInfo = document.createElement('div');
+    debugInfo.id = 'mobile-debug';
+    debugInfo.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; 
+        background: #000; color: #0f0; padding: 10px; 
+        font-family: monospace; font-size: 12px; 
+        z-index: 9999; max-height: 150px; overflow-y: auto;
+        border-bottom: 2px solid #0f0;
+    `;
+    debugInfo.innerHTML = `
+        <strong>🔍 QR DEBUG:</strong><br>
+        URL: ${window.location.href}<br>
+        Session: ${sessionCode || 'NONE'}<br>
+        Rotation: ${rotationCode || 'NONE'}<br>
+        Course: ${courseName || 'NONE'}<br>
+        <button onclick="this.parentNode.style.display='none'" style="margin-top:5px; background:#0f0; color:#000; border:none; padding:3px 6px;">Hide</button>
+    `;
+    document.body.insertBefore(debugInfo, document.body.firstChild);
+    
     if (sessionCode && rotationCode) {
         // New short URL format
         const fullCode = `${sessionCode}-${rotationCode}`;
