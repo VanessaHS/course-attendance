@@ -441,7 +441,15 @@ class AttendanceApp {
         
         // Save to GitHub for cross-device sync
         if (window.githubStorage) {
-            console.log('📤 Saving check-in to GitHub:', { baseSessionCode, studentId });
+            const token = window.githubStorage.getToken();
+            console.log('📤 Saving check-in to GitHub:', { baseSessionCode, studentId, hasToken: !!token });
+            
+            if (!token) {
+                console.error('❌ No GitHub token found on mobile - check-in will only save locally');
+                this.showMessage('⚠️ Check-in saved locally only. Admin needs to sync manually.', 'info');
+                return;
+            }
+            
             try {
                 await window.githubStorage.saveAttendance(
                     baseSessionCode, 
@@ -603,7 +611,27 @@ document.addEventListener('DOMContentLoaded', () => {
         legacyRotation
     });
     
-    // Debug info removed - QR parsing is working correctly
+    // Check GitHub token status and show indicator
+    const githubStatus = document.createElement('div');
+    githubStatus.style.cssText = `
+        position: fixed; top: 10px; right: 10px; 
+        padding: 8px 12px; border-radius: 6px; 
+        font-size: 12px; font-weight: bold; z-index: 1000;
+    `;
+    
+    if (window.githubStorage && window.githubStorage.getToken()) {
+        githubStatus.textContent = '🔗 GitHub Sync ON';
+        githubStatus.style.background = '#d4edda';
+        githubStatus.style.color = '#155724';
+        githubStatus.style.border = '1px solid #c3e6cb';
+    } else {
+        githubStatus.textContent = '📱 Local Only';
+        githubStatus.style.background = '#fff3cd';
+        githubStatus.style.color = '#856404';
+        githubStatus.style.border = '1px solid #ffeaa7';
+    }
+    
+    document.body.appendChild(githubStatus);
     
     if (sessionCode && rotationCode) {
         // New short URL format
