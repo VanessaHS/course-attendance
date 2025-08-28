@@ -275,20 +275,46 @@ class AttendanceAdmin {
                 resolve();
                 return;
             }
-            // Attempt to find existing script tag
-            const existing = Array.from(document.scripts).find(s => s.src && s.src.includes('qrcode'));
-            if (existing) {
-                existing.addEventListener('load', () => resolve());
-                existing.addEventListener('error', () => reject(new Error('Existing QRCode script failed to load')));
-                return;
-            }
-            // Inject script dynamically
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
-            script.async = true;
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error('Failed to load QRCode script'));
-            document.head.appendChild(script);
+            const sources = [
+                'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+                'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js',
+                // Fallback to a common CDNJS path if available in the future
+                'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js'
+            ];
+            const tryNext = (idx) => {
+                if (typeof QRCode !== 'undefined') { resolve(); return; }
+                if (idx >= sources.length) {
+                    reject(new Error('All QRCode CDNs failed'));
+                    return;
+                }
+                const url = sources[idx] + `?v=${Date.now()}`;
+                const script = document.createElement('script');
+                script.src = url;
+                script.async = true;
+                script.crossOrigin = 'anonymous';
+                script.onload = () => {
+                    // Give the browser a tick to register global
+                    setTimeout(() => {
+                        if (typeof QRCode !== 'undefined') {
+                            resolve();
+                        } else {
+                            tryNext(idx + 1);
+                        }
+                    }, 0);
+                };
+                script.onerror = () => {
+                    // Try next source
+                    tryNext(idx + 1);
+                };
+                document.head.appendChild(script);
+                // Also set a timeout in case onerror doesn't fire
+                setTimeout(() => {
+                    if (typeof QRCode === 'undefined') {
+                        tryNext(idx + 1);
+                    }
+                }, 3000);
+            };
+            tryNext(0);
         });
     }
 
