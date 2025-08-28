@@ -213,6 +213,7 @@ class AttendanceAdmin {
         const now = new Date();
         const timeSlot = Math.floor(now.getTime() / (2 * 60 * 1000)); // 2-minute intervals
         const visualCode = this.generateVisualCode(this.currentSession.code, timeSlot);
+        const combinedCode = `${this.currentSession.code}-${visualCode}`;
         
         // Stateless payload embedded in QR
         const payload = {
@@ -238,19 +239,19 @@ class AttendanceAdmin {
             }
         });
         
-        sessionCodeSpan.textContent = `${visualCode}`;
+        sessionCodeSpan.textContent = `${combinedCode}`;
         
         // Show next rotation time
         const nextRotation = new Date((timeSlot + 1) * 2 * 60 * 1000);
         expirySpan.textContent = `Next code: ${nextRotation.toLocaleTimeString()}`;
         
         // Update the prominent banner display
-        this.updateSessionBanner(`${visualCode}`, nextRotation);
+        this.updateSessionBanner(`${combinedCode}`, nextRotation);
         
         qrDisplay.style.display = 'block';
         
         // Log QR code generation for debugging
-        console.log(`🎯 QR Code generated: ${visualCode} (expires ${nextRotation.toLocaleTimeString()})`);
+        console.log(`🎯 QR Code generated: ${combinedCode} (expires ${nextRotation.toLocaleTimeString()})`);
         
         // No individual timeouts - master refresh handles this
     }
@@ -491,7 +492,7 @@ class AttendanceAdmin {
         const slot = Math.floor(now / slotMs);
         this.currentSlot = slot;
         const rotation = this.generateVisualCode(this.currentSession.code, slot);
-        this.currentRotationCode = rotation; // now equals the full visual code
+        this.currentRotationCode = rotation; // visual (suffix) code
         
         // Only re-render if slot changed
         if (this.lastRenderedSlot !== slot) {
@@ -502,7 +503,7 @@ class AttendanceAdmin {
         
         // Update banner with details each tick
         const nextRotation = new Date((slot + 1) * slotMs);
-        this.updateSessionBanner(`${rotation}`, nextRotation);
+        this.updateSessionBanner(`${this.currentSession.code}-${rotation}`, nextRotation);
         this.showRefreshIndicator();
         console.log('✅ Boundary refresh executed at', new Date().toLocaleTimeString());
     }
