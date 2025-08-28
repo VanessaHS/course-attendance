@@ -43,6 +43,11 @@ class AttendanceAdmin {
         document.getElementById('confirm-manual-checkout').addEventListener('click', () => this.performManualCheckout());
         document.getElementById('cancel-manual-checkout').addEventListener('click', () => this.hideManualCheckout());
         
+        // GitHub setup functionality
+        document.getElementById('setup-github-btn').addEventListener('click', () => this.showGitHubSetup());
+        document.getElementById('cancel-github-setup').addEventListener('click', () => this.hideGitHubSetup());
+        document.getElementById('save-github-setup').addEventListener('click', () => this.saveGitHubSetup());
+        
         // Settings
         document.getElementById('anonymous-mode').addEventListener('change', () => this.saveSettings());
         document.getElementById('auto-delete').addEventListener('change', () => this.saveSettings());
@@ -808,6 +813,85 @@ class AttendanceAdmin {
         setTimeout(() => {
             document.body.removeChild(messageDiv);
         }, 3000);
+    }
+    
+    showGitHubSetup() {
+        const modal = document.getElementById('github-setup-modal');
+        const tokenInput = document.getElementById('github-token');
+        const statusDiv = document.getElementById('github-status');
+        
+        // Pre-fill with existing token if available
+        if (window.githubStorage) {
+            const existingToken = window.githubStorage.getToken();
+            if (existingToken) {
+                tokenInput.value = existingToken;
+            }
+        }
+        
+        statusDiv.style.display = 'none';
+        modal.style.display = 'flex';
+        tokenInput.focus();
+    }
+    
+    hideGitHubSetup() {
+        const modal = document.getElementById('github-setup-modal');
+        modal.style.display = 'none';
+    }
+    
+    async saveGitHubSetup() {
+        const tokenInput = document.getElementById('github-token');
+        const statusDiv = document.getElementById('github-status');
+        const saveBtn = document.getElementById('save-github-setup');
+        
+        const token = tokenInput.value.trim();
+        
+        if (!token) {
+            this.showGitHubStatus('Please enter a GitHub token', 'error');
+            return;
+        }
+        
+        if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+            this.showGitHubStatus('Token should start with "ghp_" or "github_pat_"', 'error');
+            return;
+        }
+        
+        saveBtn.textContent = 'Testing...';
+        saveBtn.disabled = true;
+        
+        try {
+            // Set the token
+            if (window.githubStorage) {
+                window.githubStorage.setToken(token);
+                
+                // Test the token by trying to access the repository
+                await window.githubStorage.listFiles('');
+                
+                this.showGitHubStatus('✅ GitHub token saved and tested successfully!', 'success');
+                
+                setTimeout(() => {
+                    this.hideGitHubSetup();
+                }, 2000);
+                
+            } else {
+                throw new Error('GitHub storage not available');
+            }
+            
+        } catch (error) {
+            console.error('GitHub setup error:', error);
+            this.showGitHubStatus(`❌ Error: ${error.message}. Please check your token and permissions.`, 'error');
+        }
+        
+        saveBtn.textContent = 'Save & Test';
+        saveBtn.disabled = false;
+    }
+    
+    showGitHubStatus(message, type) {
+        const statusDiv = document.getElementById('github-status');
+        statusDiv.textContent = message;
+        statusDiv.style.display = 'block';
+        statusDiv.style.background = type === 'success' ? '#d4edda' : '#f8d7da';
+        statusDiv.style.color = type === 'success' ? '#155724' : '#721c24';
+        statusDiv.style.border = `1px solid ${type === 'success' ? '#c3e6cb' : '#f5c6cb'}`;
     }
 }
 
