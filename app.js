@@ -432,7 +432,12 @@ class AttendanceApp {
         
         localStorage.setItem('attendance_data', JSON.stringify(attendanceData));
         
-        console.log('Check-in successful');
+        console.log('Check-in successful - stored data:', {
+            sessionCode: baseSessionCode,
+            studentId: studentId,
+            date: dateKey,
+            attendanceData: attendanceData[dateKey][baseSessionCode]
+        });
         this.showMessage(`✅ Successfully checked in at ${now.toLocaleTimeString()}`, 'success');
         this.loadTodayAttendance();
         

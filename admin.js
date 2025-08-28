@@ -369,7 +369,15 @@ class AttendanceAdmin {
             return;
         }
         
-        const attendanceData = JSON.parse(localStorage.getItem('attendance_data'));
+        const attendanceData = JSON.parse(localStorage.getItem('attendance_data') || '{}');
+        console.log('Admin checking attendance data:', {
+            currentSession: this.currentSession.code,
+            date: this.currentSession.date,
+            allData: Object.keys(attendanceData),
+            sessionExists: !!attendanceData[this.currentSession.date],
+            sessionData: attendanceData[this.currentSession.date]?.[this.currentSession.code]
+        });
+        
         const sessionData = attendanceData[this.currentSession.date]?.[this.currentSession.code];
         
         if (!sessionData || !sessionData.students) {
