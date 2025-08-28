@@ -44,7 +44,14 @@ class AttendanceAdmin {
         document.getElementById('cancel-manual-checkout').addEventListener('click', () => this.hideManualCheckout());
         
         // GitHub setup functionality
-        document.getElementById('setup-github-btn').addEventListener('click', () => this.showGitHubSetup());
+        console.log('🔧 Setting up GitHub button listeners...');
+        const setupBtn = document.getElementById('setup-github-btn');
+        if (setupBtn) {
+            console.log('✅ GitHub setup button found!');
+            setupBtn.addEventListener('click', () => this.showGitHubSetup());
+        } else {
+            console.error('❌ GitHub setup button NOT found!');
+        }
         document.getElementById('cancel-github-setup').addEventListener('click', () => this.hideGitHubSetup());
         document.getElementById('save-github-setup').addEventListener('click', () => this.saveGitHubSetup());
         
