@@ -53,6 +53,13 @@ class GitHubStorage {
             const fileName = `${sessionCode}_${new Date().toISOString().split('T')[0]}.json`;
             const filePath = `${this.dataPath}/${fileName}`;
             
+            console.log('📁 GitHub file details:', {
+                fileName,
+                filePath,
+                repo: `${this.owner}/${this.repo}`,
+                token: this.token ? `${this.token.substring(0, 8)}...` : 'NONE'
+            });
+            
             // Get existing file content
             let existingData = {};
             try {
@@ -85,9 +92,13 @@ class GitHubStorage {
             Object.assign(existingData.students[studentId], additionalData);
             
             // Save back to GitHub
-            await this.saveFile(filePath, JSON.stringify(existingData, null, 2), `${action}: ${studentId} at ${new Date(timestamp).toLocaleTimeString()}`);
+            const result = await this.saveFile(filePath, JSON.stringify(existingData, null, 2), `${action}: ${studentId} at ${new Date(timestamp).toLocaleTimeString()}`);
             
-            console.log(`✅ Attendance saved to GitHub: ${studentId} ${action}`);
+            console.log(`✅ Attendance saved to GitHub: ${studentId} ${action}`, {
+                fileName,
+                filePath,
+                result: result ? 'SUCCESS' : 'FAILED'
+            });
             return true;
             
         } catch (error) {
