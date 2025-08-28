@@ -609,13 +609,40 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🔄 Sync flag detected, initializing GitHub storage...');
         // Force re-check of localStorage token
         const token = localStorage.getItem('github_token');
-        console.log('🔍 Debug localStorage check:', {
+        // Create visible debug display for mobile
+        const debugDiv = document.createElement('div');
+        debugDiv.style.cssText = `
+            position: fixed; top: 50px; left: 10px; right: 10px;
+            background: #000; color: #0f0; padding: 15px;
+            font-family: monospace; font-size: 11px;
+            border: 2px solid #0f0; border-radius: 8px;
+            z-index: 9999; max-height: 200px; overflow-y: auto;
+        `;
+        
+        const debugInfo = {
             syncFlag,
             hasGithubStorage: !!window.githubStorage,
             tokenExists: !!token,
             tokenLength: token ? token.length : 0,
-            allLocalStorageKeys: Object.keys(localStorage)
-        });
+            allLocalStorageKeys: Object.keys(localStorage),
+            currentDomain: window.location.hostname,
+            currentURL: window.location.href
+        };
+        
+        debugDiv.innerHTML = `
+            <strong>🔍 MOBILE DEBUG INFO:</strong><br>
+            Sync Flag: ${debugInfo.syncFlag}<br>
+            GitHub Storage: ${debugInfo.hasGithubStorage}<br>
+            Token Exists: ${debugInfo.tokenExists}<br>
+            Token Length: ${debugInfo.tokenLength}<br>
+            Domain: ${debugInfo.currentDomain}<br>
+            LocalStorage Keys: ${debugInfo.allLocalStorageKeys.join(', ')}<br>
+            <button onclick="this.parentNode.remove()" style="margin-top:10px; background:#0f0; color:#000; border:none; padding:5px;">Close</button>
+        `;
+        
+        document.body.appendChild(debugDiv);
+        
+        console.log('🔍 Debug localStorage check:', debugInfo);
         
         if (token) {
             window.githubStorage.setToken(token);
