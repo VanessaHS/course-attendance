@@ -225,8 +225,18 @@ class AttendanceAdmin {
         let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(this.currentSession.courseName)}`;
         
         // Add sync flag if GitHub is configured (mobile will check localStorage)
-        if (window.githubStorage && window.githubStorage.getToken()) {
+        const hasToken = window.githubStorage && window.githubStorage.getToken();
+        console.log('🔧 Admin QR Generation Debug:', {
+            hasGithubStorage: !!window.githubStorage,
+            hasToken: !!hasToken,
+            tokenLength: hasToken ? window.githubStorage.getToken().length : 0
+        });
+        
+        if (hasToken) {
             qrData += `&sync=1`;
+            console.log('✅ Added sync=1 to QR code');
+        } else {
+            console.log('⚠️ No GitHub token - QR code will not have sync flag');
         }
         
         // Debug: Log URL length
