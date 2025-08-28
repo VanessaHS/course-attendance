@@ -508,7 +508,7 @@ class AttendanceAdmin {
                 console.log('👀 Page visible - resuming refresh');
                 if (this.currentSession && this.currentSession.active) {
                     // Force immediate refresh when coming back
-                    setTimeout(() => this.performMasterRefresh(), 500);
+                    setTimeout(() => this.performBoundaryRefresh(), 500);
                 }
             }
         });
