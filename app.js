@@ -584,10 +584,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const legacySession = urlParams.get('session'); // legacy
     const legacyRotation = urlParams.get('rotation'); // legacy
     
+    // Debug: Log what we received from QR scan
+    console.log('📱 QR Scan Debug:', {
+        url: window.location.href,
+        sessionCode,
+        rotationCode,
+        courseName,
+        payloadB64,
+        legacySession,
+        legacyRotation
+    });
+    
     if (sessionCode && rotationCode) {
         // New short URL format
         const fullCode = `${sessionCode}-${rotationCode}`;
         document.getElementById('session-code').value = fullCode;
+        console.log('✅ QR scan successful! Session code filled:', fullCode);
         
         // Display course name prominently
         if (courseName) {
@@ -595,13 +607,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (courseDisplay) {
                 const courseNameElement = courseDisplay.querySelector('.course-name');
                 if (courseNameElement) {
-                    courseNameElement.textContent = decodeURIComponent(courseName);
+                    const decodedCourseName = decodeURIComponent(courseName);
+                    courseNameElement.textContent = decodedCourseName;
+                    console.log('✅ Course name displayed:', decodedCourseName);
                 }
                 courseDisplay.style.display = 'block';
             }
-            
-            // Also update page title
-            document.title = `Check-in: ${decodeURIComponent(courseName)}`;
+        } else {
+            console.log('⚠️ No course name in QR code');
         }
         
         // Create a basic session entry for validation
