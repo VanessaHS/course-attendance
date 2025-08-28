@@ -222,7 +222,12 @@ class AttendanceAdmin {
         
         // Create a much shorter URL using just session code and rotation
         const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
-        const qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(this.currentSession.courseName)}`;
+        let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(this.currentSession.courseName)}`;
+        
+        // Add sync flag if GitHub is configured (mobile will check localStorage)
+        if (window.githubStorage && window.githubStorage.getToken()) {
+            qrData += `&sync=1`;
+        }
         
         // Debug: Log URL length
         console.log('QR URL length:', qrData.length, 'URL:', qrData);

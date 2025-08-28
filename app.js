@@ -599,9 +599,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const sessionCode = urlParams.get('s');      // session code
     const rotationCode = urlParams.get('r');     // rotation code  
     const courseName = urlParams.get('c');       // course name
+    const syncFlag = urlParams.get('sync');      // GitHub sync flag
     const payloadB64 = urlParams.get('p');       // legacy base64 payload
     const legacySession = urlParams.get('session'); // legacy
     const legacyRotation = urlParams.get('rotation'); // legacy
+    
+    // If sync flag is present, try to initialize GitHub storage
+    if (syncFlag === '1' && window.githubStorage) {
+        console.log('🔄 Sync flag detected, initializing GitHub storage...');
+        // Force re-check of localStorage token
+        const token = localStorage.getItem('github_token');
+        if (token) {
+            window.githubStorage.setToken(token);
+            console.log('✅ GitHub token found and set for mobile');
+        } else {
+            console.log('⚠️ Sync flag present but no GitHub token in localStorage');
+        }
+    }
     
     // Debug: Log what we received from QR scan
     console.log('📱 QR Scan Debug:', {
@@ -614,27 +628,40 @@ document.addEventListener('DOMContentLoaded', () => {
         legacyRotation
     });
     
-    // Check GitHub token status and show indicator
-    const githubStatus = document.createElement('div');
-    githubStatus.style.cssText = `
-        position: fixed; top: 10px; right: 10px; 
-        padding: 8px 12px; border-radius: 6px; 
-        font-size: 12px; font-weight: bold; z-index: 1000;
-    `;
-    
-    if (window.githubStorage && window.githubStorage.getToken()) {
-        githubStatus.textContent = '🔗 GitHub Sync ON';
-        githubStatus.style.background = '#d4edda';
-        githubStatus.style.color = '#155724';
-        githubStatus.style.border = '1px solid #c3e6cb';
-    } else {
-        githubStatus.textContent = '📱 Local Only';
-        githubStatus.style.background = '#fff3cd';
-        githubStatus.style.color = '#856404';
-        githubStatus.style.border = '1px solid #ffeaa7';
+    // Check GitHub token status and show indicator (after token initialization)
+    function updateGitHubStatus() {
+        let githubStatus = document.getElementById('github-status-indicator');
+        if (!githubStatus) {
+            githubStatus = document.createElement('div');
+            githubStatus.id = 'github-status-indicator';
+            githubStatus.style.cssText = `
+                position: fixed; top: 10px; right: 10px; 
+                padding: 8px 12px; border-radius: 6px; 
+                font-size: 12px; font-weight: bold; z-index: 1000;
+            `;
+            document.body.appendChild(githubStatus);
+        }
+        
+        if (window.githubStorage && window.githubStorage.getToken()) {
+            githubStatus.textContent = '🔗 GitHub Sync ON';
+            githubStatus.style.background = '#d4edda';
+            githubStatus.style.color = '#155724';
+            githubStatus.style.border = '1px solid #c3e6cb';
+        } else {
+            githubStatus.textContent = '📱 Local Only';
+            githubStatus.style.background = '#fff3cd';
+            githubStatus.style.color = '#856404';
+            githubStatus.style.border = '1px solid #ffeaa7';
+        }
     }
     
-    document.body.appendChild(githubStatus);
+    // Initial status check
+    updateGitHubStatus();
+    
+    // Update status after token initialization (if sync flag was present)
+    if (syncFlag === '1') {
+        setTimeout(updateGitHubStatus, 100);
+    }
     
     if (sessionCode && rotationCode) {
         // New short URL format
