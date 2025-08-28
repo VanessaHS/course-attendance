@@ -47,11 +47,11 @@ class AttendanceAdmin {
         document.getElementById('anonymous-mode').addEventListener('change', () => this.saveSettings());
         document.getElementById('auto-delete').addEventListener('change', () => this.saveSettings());
         
-        // Auto-refresh every 30 seconds when session is active
-        this.startAutoRefresh();
+        // Start comprehensive auto-refresh system
+        this.startMasterRefresh();
         
-        // Auto-refresh QR code and session banner every 20 seconds
-        this.startQRRefresh();
+        // Add window focus/blur handling for better performance
+        this.setupWindowEventHandlers();
     }
 
     generateSessionCode() {
@@ -112,6 +112,9 @@ class AttendanceAdmin {
         this.generateQRCode();
         this.refreshLiveAttendance();
         
+        // Start master refresh system for this session
+        this.startMasterRefresh();
+        
         this.showMessage('New session created successfully!', 'success');
     }
 
@@ -136,14 +139,10 @@ class AttendanceAdmin {
             // Hide the session banner
             document.getElementById('session-code-banner').style.display = 'none';
             
-            // Clear QR refresh intervals
-            if (this.qrRefreshInterval) {
-                clearTimeout(this.qrRefreshInterval);
-            }
-            if (this.qrAutoRefreshInterval) {
-                clearInterval(this.qrAutoRefreshInterval);
-            }
+            // Stop all refresh intervals
+            this.stopAllRefreshIntervals();
             
+            console.log('🛑 Session ended - all refresh intervals stopped');
             this.showMessage('Session ended successfully', 'info');
         }
     }
@@ -158,6 +157,10 @@ class AttendanceAdmin {
                 this.currentSession = session;
                 this.displayCurrentSession();
                 this.generateQRCode();
+                
+                // Start master refresh for existing session
+                this.startMasterRefresh();
+                console.log('🔄 Resumed session with master refresh');
                 break;
             }
         }
@@ -228,15 +231,10 @@ class AttendanceAdmin {
         
         qrDisplay.style.display = 'block';
         
-        // Auto-refresh QR code every 2 minutes
-        if (this.qrRefreshInterval) {
-            clearTimeout(this.qrRefreshInterval);
-        }
+        // Log QR code generation for debugging
+        console.log(`🎯 QR Code generated: ${this.currentSession.code}-${rotationCode} (expires ${nextRotation.toLocaleTimeString()})`);
         
-        const msUntilNext = nextRotation.getTime() - now.getTime();
-        this.qrRefreshInterval = setTimeout(() => {
-            this.generateQRCode();
-        }, msUntilNext + 1000); // Add 1 second buffer
+        // No individual timeouts - master refresh handles this
     }
 
     generateTimeBasedCode(timeSlot) {
@@ -348,21 +346,137 @@ class AttendanceAdmin {
         document.getElementById('session-duration').textContent = duration;
     }
 
-    startAutoRefresh() {
-        this.refreshInterval = setInterval(() => {
-            if (this.currentSession) {
-                this.refreshLiveAttendance();
-            }
-        }, 30000); // Refresh every 30 seconds
+    startMasterRefresh() {
+        // Clear any existing intervals
+        this.stopAllRefreshIntervals();
+        
+        // Master refresh every 10 seconds for responsiveness
+        this.masterRefreshInterval = setInterval(() => {
+            this.performMasterRefresh();
+        }, 10000);
+        
+        // Also perform immediate refresh
+        setTimeout(() => this.performMasterRefresh(), 1000);
+        
+        // Backup mechanism - check every 30 seconds if refresh is still running
+        this.backupCheckInterval = setInterval(() => {
+            this.ensureRefreshIsRunning();
+        }, 30000);
+        
+        console.log('🔄 Master refresh system started (10s intervals + backup monitoring)');
     }
 
-    startQRRefresh() {
-        // Refresh QR code and session banner every 20 seconds
-        this.qrAutoRefreshInterval = setInterval(() => {
-            if (this.currentSession && this.currentSession.active) {
-                this.generateQRCode();
+    stopAllRefreshIntervals() {
+        // Clear all possible intervals
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
+        if (this.qrRefreshInterval) {
+            clearTimeout(this.qrRefreshInterval);
+            this.qrRefreshInterval = null;
+        }
+        if (this.qrAutoRefreshInterval) {
+            clearInterval(this.qrAutoRefreshInterval);
+            this.qrAutoRefreshInterval = null;
+        }
+        if (this.masterRefreshInterval) {
+            clearInterval(this.masterRefreshInterval);
+            this.masterRefreshInterval = null;
+        }
+        if (this.backupCheckInterval) {
+            clearInterval(this.backupCheckInterval);
+            this.backupCheckInterval = null;
+        }
+        
+        console.log('🛑 All refresh intervals cleared');
+    }
+
+    performMasterRefresh() {
+        if (!this.currentSession || !this.currentSession.active) {
+            console.log('⏹️ No active session - skipping refresh');
+            return;
+        }
+
+        try {
+            console.log('🔄 Performing master refresh...');
+            
+            // Always refresh QR code and banner
+            this.generateQRCode();
+            
+            // Refresh attendance data
+            this.refreshLiveAttendance();
+            
+            // Add visual refresh indicator
+            this.showRefreshIndicator();
+            
+            console.log('✅ Master refresh completed');
+            
+        } catch (error) {
+            console.error('❌ Master refresh error:', error);
+        }
+    }
+
+    showRefreshIndicator() {
+        const banner = document.getElementById('session-code-banner');
+        const refreshStatus = document.getElementById('refresh-status');
+        
+        if (banner && refreshStatus) {
+            // Update refresh indicator
+            const now = new Date();
+            const refreshText = document.querySelector('.refresh-text');
+            if (refreshText) {
+                refreshText.textContent = `Last refresh: ${now.toLocaleTimeString()}`;
+                
+                // Reset text after 3 seconds
+                setTimeout(() => {
+                    refreshText.textContent = 'Auto-refreshing every 10s';
+                }, 3000);
             }
-        }, 20000); // Refresh every 20 seconds
+            
+            // Add brief visual feedback to banner
+            banner.style.boxShadow = '0 8px 32px rgba(46, 204, 113, 0.4)';
+            setTimeout(() => {
+                banner.style.boxShadow = '0 8px 32px rgba(66, 153, 225, 0.3)';
+            }, 500);
+        }
+    }
+
+    setupWindowEventHandlers() {
+        // Reduce refresh frequency when window loses focus
+        window.addEventListener('focus', () => {
+            console.log('👁️ Window focused - resuming normal refresh');
+            if (this.currentSession) {
+                this.startMasterRefresh(); // Restart with normal frequency
+            }
+        });
+
+        window.addEventListener('blur', () => {
+            console.log('😴 Window blurred - reducing refresh frequency');
+            // Don't completely stop, just reduce frequency when not viewing
+        });
+
+        // Handle page visibility changes (mobile, tab switching)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                console.log('🙈 Page hidden - pausing refresh');
+                // Pause refresh to save resources
+            } else {
+                console.log('👀 Page visible - resuming refresh');
+                if (this.currentSession && this.currentSession.active) {
+                    // Force immediate refresh when coming back
+                    setTimeout(() => this.performMasterRefresh(), 500);
+                }
+            }
+        });
+    }
+
+    // Backup refresh mechanism in case master refresh fails
+    ensureRefreshIsRunning() {
+        if (this.currentSession && this.currentSession.active && !this.masterRefreshInterval) {
+            console.log('⚠️ Detected missing refresh interval - restarting');
+            this.startMasterRefresh();
+        }
     }
 
     loadAttendanceHistory() {

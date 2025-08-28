@@ -12,7 +12,13 @@
         <!-- Prominent Session Code Display -->
         <div id="session-code-banner" class="session-banner" style="display: none;">
             <div class="current-code-display">
-                <h2>Current Session Code:</h2>
+                <div class="banner-header">
+                    <h2>Current Session Code:</h2>
+                    <div class="refresh-status" id="refresh-status">
+                        <span class="refresh-indicator">🔄</span>
+                        <span class="refresh-text">Auto-refreshing every 10s</span>
+                    </div>
+                </div>
                 <div class="session-code-large" id="banner-session-code">No Active Session</div>
                 <div class="next-rotation" id="banner-next-rotation"></div>
             </div>
