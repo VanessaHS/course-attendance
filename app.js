@@ -451,6 +451,14 @@ class AttendanceApp {
             }
             
             try {
+                console.log('📤 About to save to GitHub:', {
+                    baseSessionCode,
+                    studentId,
+                    action: 'checkin',
+                    timestamp: now.toISOString(),
+                    expectedFileName: `${baseSessionCode}_${now.toISOString().split('T')[0]}.json`
+                });
+                
                 await window.githubStorage.saveAttendance(
                     baseSessionCode, 
                     studentId, 
@@ -459,8 +467,14 @@ class AttendanceApp {
                     { device: 'mobile', userAgent: navigator.userAgent.substring(0, 50) }
                 );
                 console.log('✅ Check-in saved to GitHub successfully');
+                
+                // Show success message with filename
+                const fileName = `${baseSessionCode}_${now.toISOString().split('T')[0]}.json`;
+                this.showMessage(`✅ Saved to GitHub: ${fileName}`, 'success');
+                
             } catch (error) {
                 console.error('❌ Failed to save check-in to GitHub:', error);
+                this.showMessage(`❌ GitHub save failed: ${error.message}`, 'error');
             }
         } else {
             console.log('⚠️ GitHub storage not available');
@@ -596,7 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Always show version indicator
     const versionDiv = document.createElement('div');
-    versionDiv.textContent = 'v2025012804';
+    versionDiv.textContent = 'v2025012805';
     versionDiv.style.cssText = 'position:fixed; bottom:10px; left:10px; background:red; color:white; padding:5px; font-size:10px; z-index:9999;';
     document.body.appendChild(versionDiv);
     
