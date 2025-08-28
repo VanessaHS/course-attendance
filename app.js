@@ -241,9 +241,14 @@ class AttendanceApp {
         console.log('Is check out:', isCheckOut);
         
         // Parse session code (might include rotation code)
-        const parts = sessionCode.split('-');
-        const baseSessionCode = parts[0];
-        const providedRotationCode = parts[1];
+        // New mode: single rotating 6-char code (no dash)
+        let baseSessionCode = sessionCode;
+        let providedRotationCode = '';
+        if (sessionCode.includes('-')) {
+            const parts = sessionCode.split('-');
+            baseSessionCode = parts[0];
+            providedRotationCode = parts[1];
+        }
         
         console.log('Base session code:', baseSessionCode);
         console.log('Provided rotation code:', providedRotationCode);
@@ -278,7 +283,7 @@ class AttendanceApp {
         
         // For check-in, allow current and previous time slot (in case of timing issues)
         // For check-out, require current time slot validation
-        if (providedRotationCode) {
+        if (providedRotationCode || sessionCode.length === 6) {
             console.log('=== ROTATION CODE VALIDATION ===');
             console.log('Current timestamp:', now);
             console.log('Current date/time:', new Date(now).toLocaleString());
@@ -291,9 +296,10 @@ class AttendanceApp {
             console.log('Previous time slot:', previousTimeSlot);
             console.log('Next time slot:', nextTimeSlot);
             
-            const currentRotationCode = this.generateTimeBasedCode(baseSessionCode, currentTimeSlot);
-            const previousRotationCode = this.generateTimeBasedCode(baseSessionCode, previousTimeSlot);
-            const nextRotationCode = this.generateTimeBasedCode(baseSessionCode, nextTimeSlot);
+            // Visual code is derived from base code and slot
+            const currentRotationCode = this.generateVisualCode(baseSessionCode, currentTimeSlot);
+            const previousRotationCode = this.generateVisualCode(baseSessionCode, previousTimeSlot);
+            const nextRotationCode = this.generateVisualCode(baseSessionCode, nextTimeSlot);
             
             console.log('Current rotation code:', currentRotationCode);
             console.log('Previous rotation code:', previousRotationCode);  
@@ -309,9 +315,10 @@ class AttendanceApp {
                 }
             } else {
                 // MOBILE FIX: For check-in, allow current, previous, OR next time slot (more tolerant)
-                if (providedRotationCode !== currentRotationCode && 
-                    providedRotationCode !== previousRotationCode && 
-                    providedRotationCode !== nextRotationCode) {
+                const candidate = providedRotationCode || sessionCode; // allow pure 6-char code
+                if (candidate !== currentRotationCode && 
+                    candidate !== previousRotationCode && 
+                    candidate !== nextRotationCode) {
                     console.log('ERROR: Check-in code validation failed');
                     console.log('None of the time slots matched');
                     this.showMessage('Session code has expired. Please scan the current QR code or try again in a few seconds.', 'error');
@@ -340,6 +347,25 @@ class AttendanceApp {
         for (let i = 0; i < 3; i++) {
             code += chars[absHash % chars.length];
             absHash = Math.floor(absHash / chars.length);
+        }
+        return code;
+    }
+
+    generateVisualCode(baseCode, slot) {
+        // Deterministic 6-char code based on baseCode and slot (must match admin)
+        const combined = `${baseCode}:${slot}`;
+        let hash = 0;
+        for (let i = 0; i < combined.length; i++) {
+            hash = ((hash << 5) - hash) + combined.charCodeAt(i);
+            hash |= 0;
+        }
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        let value = Math.abs(hash);
+        for (let i = 0; i < 6; i++) {
+            code += chars[value % chars.length];
+            value = Math.floor(value / chars.length) ^ (value << 1);
+            value = Math.abs(value);
         }
         return code;
     }

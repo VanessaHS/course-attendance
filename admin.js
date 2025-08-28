@@ -209,10 +209,10 @@ class AttendanceAdmin {
             return;
         }
         
-        // Generate time-based rotation code (changes every 2 minutes)
+        // Compute current slot and visual rotating code (changes every 2 minutes)
         const now = new Date();
         const timeSlot = Math.floor(now.getTime() / (2 * 60 * 1000)); // 2-minute intervals
-        const rotationCode = this.generateTimeBasedCode(timeSlot);
+        const visualCode = this.generateVisualCode(this.currentSession.code, timeSlot);
         
         // Stateless payload embedded in QR
         const payload = {
@@ -220,7 +220,7 @@ class AttendanceAdmin {
             code: this.currentSession.code,
             date: this.currentSession.date,
             expiresAt: this.currentSession.expiresAt,
-            rotation: rotationCode,
+            rotation: visualCode, // expose the visual code students see
             slot: timeSlot,
             course: this.currentSession.courseName
         };
@@ -238,19 +238,19 @@ class AttendanceAdmin {
             }
         });
         
-        sessionCodeSpan.textContent = `${this.currentSession.code}-${rotationCode}`;
+        sessionCodeSpan.textContent = `${visualCode}`;
         
         // Show next rotation time
         const nextRotation = new Date((timeSlot + 1) * 2 * 60 * 1000);
         expirySpan.textContent = `Next code: ${nextRotation.toLocaleTimeString()}`;
         
         // Update the prominent banner display
-        this.updateSessionBanner(`${this.currentSession.code}-${rotationCode}`, nextRotation);
+        this.updateSessionBanner(`${visualCode}`, nextRotation);
         
         qrDisplay.style.display = 'block';
         
         // Log QR code generation for debugging
-        console.log(`🎯 QR Code generated: ${this.currentSession.code}-${rotationCode} (expires ${nextRotation.toLocaleTimeString()})`);
+        console.log(`🎯 QR Code generated: ${visualCode} (expires ${nextRotation.toLocaleTimeString()})`);
         
         // No individual timeouts - master refresh handles this
     }
@@ -276,6 +276,25 @@ class AttendanceAdmin {
             script.onerror = () => reject(new Error('Failed to load QRCode script'));
             document.head.appendChild(script);
         });
+    }
+
+    generateVisualCode(baseCode, slot) {
+        // Deterministic 6-char code based on baseCode and slot
+        const combined = `${baseCode}:${slot}`;
+        let hash = 0;
+        for (let i = 0; i < combined.length; i++) {
+            hash = ((hash << 5) - hash) + combined.charCodeAt(i);
+            hash |= 0;
+        }
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        let value = Math.abs(hash);
+        for (let i = 0; i < 6; i++) {
+            code += chars[value % chars.length];
+            value = Math.floor(value / chars.length) ^ (value << 1);
+            value = Math.abs(value);
+        }
+        return code;
     }
 
     generateTimeBasedCode(timeSlot) {
@@ -471,8 +490,8 @@ class AttendanceAdmin {
         const slotMs = 2 * 60 * 1000;
         const slot = Math.floor(now / slotMs);
         this.currentSlot = slot;
-        const rotation = this.generateTimeBasedCode(slot);
-        this.currentRotationCode = rotation;
+        const rotation = this.generateVisualCode(this.currentSession.code, slot);
+        this.currentRotationCode = rotation; // now equals the full visual code
         
         // Only re-render if slot changed
         if (this.lastRenderedSlot !== slot) {
@@ -483,7 +502,7 @@ class AttendanceAdmin {
         
         // Update banner with details each tick
         const nextRotation = new Date((slot + 1) * slotMs);
-        this.updateSessionBanner(`${this.currentSession.code}-${rotation}`, nextRotation);
+        this.updateSessionBanner(`${rotation}`, nextRotation);
         this.showRefreshIndicator();
         console.log('✅ Boundary refresh executed at', new Date().toLocaleTimeString());
     }
