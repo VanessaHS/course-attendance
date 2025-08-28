@@ -51,6 +51,11 @@ class AttendanceApp {
             this.toggleDebugInfo();
         });
         
+        // Test session code button
+        document.getElementById('test-session-btn').addEventListener('click', () => {
+            this.testSessionCode();
+        });
+        
         // Auto-refresh attendance summary every 30 seconds
         setInterval(() => this.loadTodayAttendance(), 30000);
     }
@@ -65,6 +70,10 @@ class AttendanceApp {
             toggleBtn.textContent = '🙈 Hide Debug Info';
             
             // Update debug content
+            const now = new Date();
+            const currentTimeSlot = Math.floor(now.getTime() / (2 * 60 * 1000));
+            const activeSessions = JSON.parse(localStorage.getItem('active_sessions') || '{}');
+            
             const debugData = {
                 'Browser': navigator.userAgent,
                 'Screen Size': `${screen.width}x${screen.height}`,
@@ -72,7 +81,11 @@ class AttendanceApp {
                 'Touch Support': 'ontouchstart' in window ? 'Yes' : 'No',
                 'Local Storage': typeof Storage !== "undefined" ? 'Available' : 'Not Available',
                 'Current URL': window.location.href,
-                'Timestamp': new Date().toLocaleString()
+                'Timestamp': now.toLocaleString(),
+                'UTC Timestamp': now.toUTCString(),
+                'Current Time Slot': currentTimeSlot,
+                'Active Sessions': Object.keys(activeSessions).join(', ') || 'None',
+                'Today Date Key': this.today
             };
             
             let debugHTML = '<div style="font-family: monospace; font-size: 12px;">';
@@ -85,7 +98,91 @@ class AttendanceApp {
         } else {
             debugInfo.style.display = 'none';
             toggleBtn.textContent = '🔍 Show Debug Info';
+            // Also hide test results
+            document.getElementById('test-results').style.display = 'none';
         }
+    }
+
+    testSessionCode() {
+        const sessionCodeInput = document.getElementById('session-code').value.trim();
+        const testResults = document.getElementById('test-results');
+        const testOutput = document.getElementById('test-output');
+        
+        if (!sessionCodeInput) {
+            alert('Please enter a session code first, then click Test Session Code');
+            return;
+        }
+        
+        // Show results section
+        testResults.style.display = 'block';
+        
+        // Run detailed validation test
+        let output = '<h5>🧪 Session Code Validation Test</h5>';
+        output += `<p><strong>Input:</strong> "${sessionCodeInput}"</p>`;
+        
+        try {
+            // Clean the code like our validation does
+            const cleanedCode = sessionCodeInput.toUpperCase().replace(/[^\w-]/g, '');
+            output += `<p><strong>Cleaned:</strong> "${cleanedCode}"</p>`;
+            
+            // Parse the code
+            const parts = cleanedCode.split('-');
+            const baseCode = parts[0];
+            const rotationCode = parts[1];
+            
+            output += `<p><strong>Base Code:</strong> "${baseCode}"</p>`;
+            output += `<p><strong>Rotation Code:</strong> "${rotationCode || 'None'}"</p>`;
+            
+            // Check active sessions
+            const activeSessions = JSON.parse(localStorage.getItem('active_sessions') || '{}');
+            output += `<p><strong>Available Sessions:</strong> [${Object.keys(activeSessions).join(', ') || 'None'}]</p>`;
+            
+            const session = activeSessions[baseCode];
+            if (session) {
+                output += `<p><strong>✅ Base Session Found</strong></p>`;
+                output += `<p><strong>Session Date:</strong> ${session.date}</p>`;
+                output += `<p><strong>Today:</strong> ${this.today}</p>`;
+                output += `<p><strong>Date Match:</strong> ${session.date === this.today ? '✅ Yes' : '❌ No'}</p>`;
+                
+                if (rotationCode) {
+                    // Test rotation codes
+                    const now = new Date().getTime();
+                    const currentTimeSlot = Math.floor(now / (2 * 60 * 1000));
+                    const previousTimeSlot = currentTimeSlot - 1;
+                    const nextTimeSlot = currentTimeSlot + 1;
+                    
+                    const currentRotation = this.generateTimeBasedCode(baseCode, currentTimeSlot);
+                    const previousRotation = this.generateTimeBasedCode(baseCode, previousTimeSlot);
+                    const nextRotation = this.generateTimeBasedCode(baseCode, nextTimeSlot);
+                    
+                    output += `<p><strong>Time Slot:</strong> ${currentTimeSlot}</p>`;
+                    output += `<p><strong>Expected Current:</strong> "${currentRotation}"</p>`;
+                    output += `<p><strong>Expected Previous:</strong> "${previousRotation}"</p>`;
+                    output += `<p><strong>Expected Next:</strong> "${nextRotation}"</p>`;
+                    
+                    if (rotationCode === currentRotation) {
+                        output += `<p><strong>✅ Rotation Code MATCHES Current</strong></p>`;
+                    } else if (rotationCode === previousRotation) {
+                        output += `<p><strong>✅ Rotation Code MATCHES Previous</strong></p>`;
+                    } else if (rotationCode === nextRotation) {
+                        output += `<p><strong>✅ Rotation Code MATCHES Next</strong></p>`;
+                    } else {
+                        output += `<p><strong>❌ Rotation Code DOES NOT MATCH</strong></p>`;
+                    }
+                }
+                
+                output += `<p><strong>🎯 Overall Result:</strong> ${this.validateSession(cleanedCode) ? '✅ VALID' : '❌ INVALID'}</p>`;
+                
+            } else {
+                output += `<p><strong>❌ Base Session NOT Found</strong></p>`;
+                output += `<p><strong>Reason:</strong> No session exists with code "${baseCode}"</p>`;
+            }
+            
+        } catch (error) {
+            output += `<p><strong>❌ Test Error:</strong> ${error.message}</p>`;
+        }
+        
+        testOutput.innerHTML = output;
     }
 
     showMessage(message, type = 'info') {
@@ -108,7 +205,7 @@ class AttendanceApp {
 
     validateInputs() {
         const studentId = document.getElementById('student-id').value.trim();
-        const sessionCode = document.getElementById('session-code').value.trim();
+        let sessionCode = document.getElementById('session-code').value.trim();
         
         if (!studentId) {
             this.showMessage('Please enter your Student ID number', 'error');
@@ -126,23 +223,45 @@ class AttendanceApp {
             return false;
         }
         
+        // MOBILE FIX: Convert session code to uppercase and remove any invisible characters
+        sessionCode = sessionCode.toUpperCase().replace(/[^\w-]/g, '');
+        
+        console.log('Original session code:', document.getElementById('session-code').value);
+        console.log('Cleaned session code:', sessionCode);
+        
+        // Update the input field with the cleaned code
+        document.getElementById('session-code').value = sessionCode;
+        
         return { studentId, sessionCode };
     }
 
     validateSession(sessionCode, isCheckOut = false) {
+        console.log('=== SESSION VALIDATION DEBUG ===');
+        console.log('Input session code:', sessionCode);
+        console.log('Is check out:', isCheckOut);
+        
         // Parse session code (might include rotation code)
         const parts = sessionCode.split('-');
         const baseSessionCode = parts[0];
         const providedRotationCode = parts[1];
         
+        console.log('Base session code:', baseSessionCode);
+        console.log('Provided rotation code:', providedRotationCode);
+        
         // Get active sessions from localStorage
         const activeSessions = JSON.parse(localStorage.getItem('active_sessions') || '{}');
+        console.log('Active sessions:', Object.keys(activeSessions));
+        
         const session = activeSessions[baseSessionCode];
         
         if (!session) {
-            this.showMessage('Invalid session code. Please check with your instructor.', 'error');
+            console.log('ERROR: Session not found');
+            console.log('Available session codes:', Object.keys(activeSessions));
+            this.showMessage(`Invalid session code "${baseSessionCode}". Please check with your instructor.`, 'error');
             return false;
         }
+        
+        console.log('Session found:', session);
         
         // Check if session is expired
         const now = new Date().getTime();
@@ -160,25 +279,47 @@ class AttendanceApp {
         // For check-in, allow current and previous time slot (in case of timing issues)
         // For check-out, require current time slot validation
         if (providedRotationCode) {
+            console.log('=== ROTATION CODE VALIDATION ===');
+            console.log('Current timestamp:', now);
+            console.log('Current date/time:', new Date(now).toLocaleString());
+            
             const currentTimeSlot = Math.floor(now / (2 * 60 * 1000)); // 2-minute intervals
             const previousTimeSlot = currentTimeSlot - 1;
+            const nextTimeSlot = currentTimeSlot + 1;
+            
+            console.log('Current time slot:', currentTimeSlot);
+            console.log('Previous time slot:', previousTimeSlot);
+            console.log('Next time slot:', nextTimeSlot);
             
             const currentRotationCode = this.generateTimeBasedCode(baseSessionCode, currentTimeSlot);
             const previousRotationCode = this.generateTimeBasedCode(baseSessionCode, previousTimeSlot);
+            const nextRotationCode = this.generateTimeBasedCode(baseSessionCode, nextTimeSlot);
+            
+            console.log('Current rotation code:', currentRotationCode);
+            console.log('Previous rotation code:', previousRotationCode);  
+            console.log('Next rotation code:', nextRotationCode);
+            console.log('Provided rotation code:', providedRotationCode);
             
             if (isCheckOut) {
                 // For check-out, require current time slot (stricter validation)
                 if (providedRotationCode !== currentRotationCode) {
+                    console.log('ERROR: Check-out code validation failed');
                     this.showMessage('Check-out code has expired. Please scan the current QR code displayed in class.', 'error');
                     return false;
                 }
             } else {
-                // For check-in, allow current or previous time slot
-                if (providedRotationCode !== currentRotationCode && providedRotationCode !== previousRotationCode) {
-                    this.showMessage('Session code has expired. Please scan the current QR code.', 'error');
+                // MOBILE FIX: For check-in, allow current, previous, OR next time slot (more tolerant)
+                if (providedRotationCode !== currentRotationCode && 
+                    providedRotationCode !== previousRotationCode && 
+                    providedRotationCode !== nextRotationCode) {
+                    console.log('ERROR: Check-in code validation failed');
+                    console.log('None of the time slots matched');
+                    this.showMessage('Session code has expired. Please scan the current QR code or try again in a few seconds.', 'error');
                     return false;
                 }
             }
+            
+            console.log('Rotation code validation PASSED');
         }
         
         return session;

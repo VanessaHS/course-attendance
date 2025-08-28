@@ -71,7 +71,15 @@
             <div id="debug-content">
                 <p>Click "Show Debug" if you're having issues on mobile</p>
             </div>
-            <button id="toggle-debug-btn" class="btn btn-outline">🔍 Show Debug Info</button>
+            <div class="button-group">
+                <button id="toggle-debug-btn" class="btn btn-outline">🔍 Show Debug Info</button>
+                <button id="test-session-btn" class="btn btn-warning">🧪 Test Session Code</button>
+            </div>
+            <div id="test-results" style="display: none; margin-top: 15px;">
+                <h4>🔍 Session Code Test Results:</h4>
+                <div id="test-output" style="font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                </div>
+            </div>
         </div>
 
         <footer>
