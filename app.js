@@ -558,13 +558,51 @@ class AttendanceApp {
 
 // Initialize the app when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    // Pre-fill from stateless payload in QR if present
+    // Pre-fill from QR URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const payloadB64 = urlParams.get('p');
-    const sessionCode = urlParams.get('session'); // legacy
-    const rotationCode = urlParams.get('rotation'); // legacy
+    const sessionCode = urlParams.get('s');      // session code
+    const rotationCode = urlParams.get('r');     // rotation code  
+    const courseName = urlParams.get('c');       // course name
+    const payloadB64 = urlParams.get('p');       // legacy base64 payload
+    const legacySession = urlParams.get('session'); // legacy
+    const legacyRotation = urlParams.get('rotation'); // legacy
     
-    if (payloadB64) {
+    if (sessionCode && rotationCode) {
+        // New short URL format
+        const fullCode = `${sessionCode}-${rotationCode}`;
+        document.getElementById('session-code').value = fullCode;
+        
+        // Display course name prominently
+        if (courseName) {
+            const courseDisplay = document.getElementById('course-display');
+            if (courseDisplay) {
+                const courseNameElement = courseDisplay.querySelector('.course-name');
+                if (courseNameElement) {
+                    courseNameElement.textContent = decodeURIComponent(courseName);
+                }
+                courseDisplay.style.display = 'block';
+            }
+            
+            // Also update page title
+            document.title = `Check-in: ${decodeURIComponent(courseName)}`;
+        }
+        
+        // Create a basic session entry for validation
+        const activeSessions = JSON.parse(localStorage.getItem('active_sessions') || '{}');
+        activeSessions[sessionCode] = {
+            code: sessionCode,
+            courseName: courseName ? decodeURIComponent(courseName) : 'Course',
+            date: new Date().toISOString().split('T')[0],
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).getTime(), // 4 hours from now
+            active: true
+        };
+        localStorage.setItem('active_sessions', JSON.stringify(activeSessions));
+        
+        console.log('Pre-filled from QR URL:', { sessionCode, rotationCode, courseName });
+        
+    } else if (payloadB64) {
+        // Legacy base64 payload format
         try {
             const decoded = JSON.parse(atob(payloadB64));
             // Handle both old and new compressed payload formats
@@ -572,32 +610,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const rotation = decoded.rotation || decoded.r;
             const date = decoded.date || decoded.d;
             const expiresAt = decoded.expiresAt || decoded.e;
-            const courseName = decoded.course || decoded.n;
+            const courseNameDecoded = decoded.course || decoded.n;
             
             if (code && rotation) {
                 const fullCode = `${code}-${rotation}`;
                 document.getElementById('session-code').value = fullCode;
                 
                 // Display course name prominently
-                if (courseName) {
+                if (courseNameDecoded) {
                     const courseDisplay = document.getElementById('course-display');
                     if (courseDisplay) {
                         const courseNameElement = courseDisplay.querySelector('.course-name');
                         if (courseNameElement) {
-                            courseNameElement.textContent = courseName;
+                            courseNameElement.textContent = courseNameDecoded;
                         }
                         courseDisplay.style.display = 'block';
                     }
                     
                     // Also update page title
-                    document.title = `Check-in: ${courseName}`;
+                    document.title = `Check-in: ${courseNameDecoded}`;
                 }
                 
                 // Seed local active_sessions so validation works on mobile
                 const activeSessions = JSON.parse(localStorage.getItem('active_sessions') || '{}');
                 activeSessions[code] = {
                     code: code,
-                    courseName: courseName || 'Course',
+                    courseName: courseNameDecoded || 'Course',
                     date: date,
                     createdAt: new Date().toISOString(),
                     expiresAt: expiresAt,
@@ -605,16 +643,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 localStorage.setItem('active_sessions', JSON.stringify(activeSessions));
                 
-                // Also persist payload for debugging/reference
-                sessionStorage.setItem(`payload_session_${code}`, JSON.stringify(decoded));
-                console.log('Pre-filled from QR payload:', { code, rotation, courseName });
+                console.log('Pre-filled from legacy QR payload:', { code, rotation, courseNameDecoded });
             }
         } catch (e) {
             console.warn('Failed to parse QR payload', e);
         }
-    } else if (sessionCode) {
+    } else if (legacySession) {
         // Legacy support
-        const fullCode = rotationCode ? `${sessionCode}-${rotationCode}` : sessionCode;
+        const fullCode = legacyRotation ? `${legacySession}-${legacyRotation}` : legacySession;
         document.getElementById('session-code').value = fullCode;
         console.log('Pre-filled session code from URL (legacy):', fullCode);
     }

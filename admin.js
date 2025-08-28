@@ -208,19 +208,12 @@ class AttendanceAdmin {
         const visualCode = this.generateVisualCode(this.currentSession.code, timeSlot);
         const combinedCode = `${this.currentSession.code}-${visualCode}`;
         
-        // Compact payload for QR code (shorter keys to reduce size)
-        const payload = {
-            v: 1,
-            c: this.currentSession.code,        // code
-            d: this.currentSession.date,        // date
-            e: this.currentSession.expiresAt,   // expiresAt
-            r: visualCode,                      // rotation
-            s: timeSlot,                        // slot
-            n: this.currentSession.courseName   // course name
-        };
-        const payloadB64 = btoa(JSON.stringify(payload));
+        // Create a much shorter URL using just session code and rotation
         const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
-        const qrData = `${baseUrl}?p=${encodeURIComponent(payloadB64)}`;
+        const qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(this.currentSession.courseName)}`;
+        
+        // Debug: Log URL length
+        console.log('QR URL length:', qrData.length, 'URL:', qrData);
         
         // Make card visible and set student link immediately (fallback even if QR fails)
         qrDisplay.style.display = 'block';

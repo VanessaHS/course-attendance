@@ -13,7 +13,7 @@
         this._htOption = {
             width: 256,
             height: 256,
-            typeNumber: 10,  // Increased from 4 to handle longer URLs
+            typeNumber: 6,  // Moderate version for shorter URLs
             colorDark: "#000000",
             colorLight: "#ffffff",
             correctLevel: QRErrorCorrectLevel.L  // Lower error correction for more data capacity
@@ -663,7 +663,12 @@
             [6, 30, 54, 78],
             [6, 30, 56, 82],
             [6, 30, 58, 86],
-            [6, 34, 62, 90]
+            [6, 34, 62, 90],
+            [6, 28, 50, 72, 94],
+            [6, 26, 50, 74, 98],
+            [6, 30, 54, 78, 102],
+            [6, 28, 54, 80, 106],
+            [6, 32, 58, 84, 110]
         ],
 
         G15: (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0),
