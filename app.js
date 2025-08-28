@@ -610,9 +610,28 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Always show version indicator
     const versionDiv = document.createElement('div');
-    versionDiv.textContent = 'v2025012806';
+    versionDiv.textContent = 'v2025012807';
     versionDiv.style.cssText = 'position:fixed; bottom:10px; left:10px; background:red; color:white; padding:5px; font-size:10px; z-index:9999;';
     document.body.appendChild(versionDiv);
+    
+    // Add GitHub test button
+    const testBtn = document.createElement('button');
+    testBtn.textContent = 'Test GitHub';
+    testBtn.style.cssText = 'position:fixed; bottom:50px; left:10px; background:blue; color:white; padding:10px; z-index:9999; border:none; border-radius:4px;';
+    testBtn.onclick = async () => {
+        if (window.githubStorage && window.githubStorage.getToken()) {
+            try {
+                alert('Testing GitHub API...');
+                await window.githubStorage.saveAttendance('TEST123', 'STUDENT001', 'test', new Date().toISOString(), {});
+                alert('✅ GitHub test SUCCESS!');
+            } catch (error) {
+                alert(`❌ GitHub test FAILED: ${error.message}`);
+            }
+        } else {
+            alert('❌ No GitHub token available');
+        }
+    };
+    document.body.appendChild(testBtn);
     
     // Pre-fill from QR URL parameters
     const urlParams = new URLSearchParams(window.location.search);
