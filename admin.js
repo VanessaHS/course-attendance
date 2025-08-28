@@ -409,12 +409,11 @@ class AttendanceAdmin {
                     this.refreshLiveAttendance();
                 }
             }, 20000);
-            
-            // Immediate render
-            setTimeout(() => this.performBoundaryRefresh(), 100);
             console.log('⏱️ Boundary scheduler armed. Next in', Math.round(delay/1000), 's');
         };
         
+        // Do an initial refresh now, then arm the boundary scheduler
+        this.performBoundaryRefresh();
         scheduleNext();
     }
 
@@ -490,7 +489,8 @@ class AttendanceAdmin {
         window.addEventListener('focus', () => {
             console.log('👁️ Window focused - resuming normal refresh');
             if (this.currentSession) {
-                this.startMasterRefresh(); // Restart with normal frequency
+                // Re-arm boundary scheduler instead of calling removed master refresh
+                this.startBoundaryScheduler();
             }
         });
 
