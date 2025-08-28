@@ -43,6 +43,12 @@ class GitHubStorage {
      * Save attendance record to GitHub
      */
     async saveAttendance(sessionCode, studentId, action, timestamp, additionalData = {}) {
+        if (!this.token) {
+            console.error('❌ GitHub token not configured');
+            throw new Error('GitHub token not configured. Please set up GitHub sync first.');
+        }
+        
+        console.log('🔧 GitHub saveAttendance called:', { sessionCode, studentId, action });
         try {
             const fileName = `${sessionCode}_${new Date().toISOString().split('T')[0]}.json`;
             const filePath = `${this.dataPath}/${fileName}`;
