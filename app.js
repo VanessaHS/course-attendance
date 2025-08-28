@@ -609,11 +609,27 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🔄 Sync flag detected, initializing GitHub storage...');
         // Force re-check of localStorage token
         const token = localStorage.getItem('github_token');
+        console.log('🔍 Debug localStorage check:', {
+            syncFlag,
+            hasGithubStorage: !!window.githubStorage,
+            tokenExists: !!token,
+            tokenLength: token ? token.length : 0,
+            allLocalStorageKeys: Object.keys(localStorage)
+        });
+        
         if (token) {
             window.githubStorage.setToken(token);
             console.log('✅ GitHub token found and set for mobile');
         } else {
             console.log('⚠️ Sync flag present but no GitHub token in localStorage');
+            // Offer manual token entry
+            const manualToken = prompt('GitHub sync not available. Enter GitHub token manually (or Cancel for local-only mode):');
+            if (manualToken && manualToken.trim()) {
+                window.githubStorage.setToken(manualToken.trim());
+                console.log('✅ Manual GitHub token set for mobile');
+            } else {
+                console.log('📱 User chose local-only mode');
+            }
         }
     }
     
