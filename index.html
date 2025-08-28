@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Attendance - Student Check-in</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Course Attendance</h1>
+            <p>Check in to today's class session</p>
+        </header>
+
+        <div id="check-in-form" class="card">
+            <h2>Student Check-in</h2>
+            
+            <div class="form-group">
+                <label for="student-id">Student Identifier:</label>
+                <input type="text" id="student-id" placeholder="Enter your name, ID, or chosen identifier" required>
+                <small class="privacy-note">
+                    📋 Privacy Note: Only the identifier you provide is stored. You can use a nickname or anonymous ID if preferred.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="session-code">Session Code:</label>
+                <input type="text" id="session-code" placeholder="Enter today's session code" required>
+                <small>Get this code from your instructor or scan the QR code displayed in class</small>
+            </div>
+
+            <div class="button-group">
+                <button id="check-in-btn" class="btn btn-primary">✅ Check In</button>
+                <button id="check-out-btn" class="btn btn-secondary">🚪 Check Out</button>
+            </div>
+
+            <div id="status-message" class="status-message"></div>
+        </div>
+
+        <div class="card">
+            <h3>🔒 Enhanced Security Features</h3>
+            <p>This system uses multiple security layers to ensure you're actually in the classroom:</p>
+            <ul>
+                <li>🔄 <strong>Time-Rotating QR Codes:</strong> Codes change every 3 minutes</li>
+                <li>📍 <strong>Location Verification:</strong> Required for check-out (GPS verification)</li>
+                <li>⏰ <strong>Minimum Stay Time:</strong> Must stay at least 5 minutes before checking out</li>
+                <li>🎯 <strong>Real-time Validation:</strong> Check-out requires current QR code</li>
+                <li>✅ Make sure you're physically present in the classroom</li>
+            </ul>
+            <button id="verify-location-btn" class="btn btn-outline">📱 Test Location Services</button>
+            <div id="location-status"></div>
+            <div class="security-notice">
+                <p><strong>⚠️ Check-out Security Notice:</strong></p>
+                <ul>
+                    <li>📱 Location verification is <strong>required</strong> for check-out</li>
+                    <li>⏱️ You cannot check out immediately (5-minute minimum)</li>
+                    <li>🔄 QR codes expire quickly - screenshot won't work</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📊 Your Attendance Today</h3>
+            <div id="attendance-summary">
+                <p>No check-ins recorded for today</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>🔒 Privacy Protected | ⚡ Zero Cost Solution</p>
+            <a href="admin.html" class="admin-link">Instructor Admin Panel</a>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
