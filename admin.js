@@ -201,13 +201,6 @@ class AttendanceAdmin {
         const sessionCodeSpan = document.getElementById('display-session-code');
         const expirySpan = document.getElementById('session-expiry');
         
-        // Ensure QRCode library is available
-        try {
-            await this.loadQRCodeLibIfNeeded();
-        } catch (e) {
-            console.error('Failed to load QRCode library:', e);
-            return;
-        }
         
         // Compute current slot and visual rotating code (changes every 2 minutes)
         const now = new Date();
@@ -229,15 +222,35 @@ class AttendanceAdmin {
         const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
         const qrData = `${baseUrl}?p=${encodeURIComponent(payloadB64)}`;
         
-        // Generate QR code
-        QRCode.toCanvas(canvas, qrData, {
-            width: 200,
-            margin: 2,
-            color: {
-                dark: '#000000',
-                light: '#FFFFFF'
+        // Make card visible and set student link immediately (fallback even if QR fails)
+        qrDisplay.style.display = 'block';
+        const studentLink = document.getElementById('student-link');
+        if (studentLink) {
+            studentLink.href = qrData;
+            studentLink.textContent = qrData;
+        }
+
+        // Ensure QRCode library is available, then try to render QR
+        try {
+            await this.loadQRCodeLibIfNeeded();
+            // Generate QR code
+            QRCode.toCanvas(canvas, qrData, {
+                width: 200,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            });
+        } catch (e) {
+            console.warn('QR unavailable, using link fallback only:', e);
+            const ctx = canvas.getContext && canvas.getContext('2d');
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.font = '14px sans-serif';
+                ctx.fillText('QR unavailable; use the Student Link below', 10, 30);
             }
-        });
+        }
         
         sessionCodeSpan.textContent = `${combinedCode}`;
         
@@ -248,12 +261,7 @@ class AttendanceAdmin {
         // Update the prominent banner display
         this.updateSessionBanner(`${combinedCode}`, nextRotation);
         
-        qrDisplay.style.display = 'block';
-        const studentLink = document.getElementById('student-link');
-        if (studentLink) {
-            studentLink.href = qrData;
-            studentLink.textContent = qrData;
-        }
+        // (card already visible above)
         
         // Log QR code generation for debugging
         console.log(`🎯 QR Code generated: ${combinedCode} (expires ${nextRotation.toLocaleTimeString()})`);
