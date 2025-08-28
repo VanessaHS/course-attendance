@@ -370,7 +370,7 @@ class AttendanceApp {
         return code;
     }
 
-    checkIn() {
+    async checkIn() {
         try {
             console.log('Check-in attempt started');
             
