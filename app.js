@@ -567,26 +567,47 @@ document.addEventListener('DOMContentLoaded', () => {
     if (payloadB64) {
         try {
             const decoded = JSON.parse(atob(payloadB64));
-            // expected: { v, code, date, expiresAt, rotation, slot, course }
-            if (decoded && decoded.code && decoded.rotation) {
-                const fullCode = `${decoded.code}-${decoded.rotation}`;
+            // Handle both old and new compressed payload formats
+            const code = decoded.code || decoded.c;
+            const rotation = decoded.rotation || decoded.r;
+            const date = decoded.date || decoded.d;
+            const expiresAt = decoded.expiresAt || decoded.e;
+            const courseName = decoded.course || decoded.n;
+            
+            if (code && rotation) {
+                const fullCode = `${code}-${rotation}`;
                 document.getElementById('session-code').value = fullCode;
+                
+                // Display course name prominently
+                if (courseName) {
+                    const courseDisplay = document.getElementById('course-display');
+                    if (courseDisplay) {
+                        const courseNameElement = courseDisplay.querySelector('.course-name');
+                        if (courseNameElement) {
+                            courseNameElement.textContent = courseName;
+                        }
+                        courseDisplay.style.display = 'block';
+                    }
+                    
+                    // Also update page title
+                    document.title = `Check-in: ${courseName}`;
+                }
                 
                 // Seed local active_sessions so validation works on mobile
                 const activeSessions = JSON.parse(localStorage.getItem('active_sessions') || '{}');
-                activeSessions[decoded.code] = {
-                    code: decoded.code,
-                    courseName: decoded.course || 'Course',
-                    date: decoded.date,
+                activeSessions[code] = {
+                    code: code,
+                    courseName: courseName || 'Course',
+                    date: date,
                     createdAt: new Date().toISOString(),
-                    expiresAt: decoded.expiresAt,
+                    expiresAt: expiresAt,
                     active: true
                 };
                 localStorage.setItem('active_sessions', JSON.stringify(activeSessions));
                 
                 // Also persist payload for debugging/reference
-                sessionStorage.setItem(`payload_session_${decoded.code}`, JSON.stringify(decoded));
-                console.log('Pre-filled from QR payload:', decoded);
+                sessionStorage.setItem(`payload_session_${code}`, JSON.stringify(decoded));
+                console.log('Pre-filled from QR payload:', { code, rotation, courseName });
             }
         } catch (e) {
             console.warn('Failed to parse QR payload', e);

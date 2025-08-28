@@ -13,10 +13,10 @@
         this._htOption = {
             width: 256,
             height: 256,
-            typeNumber: 4,
+            typeNumber: 10,  // Increased from 4 to handle longer URLs
             colorDark: "#000000",
             colorLight: "#ffffff",
-            correctLevel: QRErrorCorrectLevel.M
+            correctLevel: QRErrorCorrectLevel.L  // Lower error correction for more data capacity
         };
 
         if (typeof options === 'string') {

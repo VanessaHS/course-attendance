@@ -208,15 +208,15 @@ class AttendanceAdmin {
         const visualCode = this.generateVisualCode(this.currentSession.code, timeSlot);
         const combinedCode = `${this.currentSession.code}-${visualCode}`;
         
-        // Stateless payload embedded in QR
+        // Compact payload for QR code (shorter keys to reduce size)
         const payload = {
             v: 1,
-            code: this.currentSession.code,
-            date: this.currentSession.date,
-            expiresAt: this.currentSession.expiresAt,
-            rotation: visualCode, // expose the visual code students see
-            slot: timeSlot,
-            course: this.currentSession.courseName
+            c: this.currentSession.code,        // code
+            d: this.currentSession.date,        // date
+            e: this.currentSession.expiresAt,   // expiresAt
+            r: visualCode,                      // rotation
+            s: timeSlot,                        // slot
+            n: this.currentSession.courseName   // course name
         };
         const payloadB64 = btoa(JSON.stringify(payload));
         const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
