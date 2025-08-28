@@ -382,31 +382,38 @@ class AttendanceApp {
             
             console.log('Inputs validated:', inputs);
             
-            const { studentId, sessionCode } = inputs;
-            const session = this.validateSession(sessionCode);
-            if (!session) {
-                console.log('Session validation failed');
-                return;
-            }
-            
-            console.log('Session validated:', session);
-        
-        // Get attendance data
-        const attendanceData = JSON.parse(localStorage.getItem('attendance_data'));
-        const dateKey = this.today;
-        
-        if (!attendanceData[dateKey]) {
-            attendanceData[dateKey] = {};
+                    const { studentId, sessionCode } = inputs;
+        const session = this.validateSession(sessionCode);
+        if (!session) {
+            console.log('Session validation failed');
+            return;
         }
         
-        if (!attendanceData[dateKey][sessionCode]) {
-            attendanceData[dateKey][sessionCode] = {
-                sessionInfo: session,
-                students: {}
-            };
-        }
-        
-        const studentData = attendanceData[dateKey][sessionCode].students[studentId];
+        console.log('Session validated:', session);
+    
+    // Extract base session code (remove rotation part if present)
+    let baseSessionCode = sessionCode;
+    if (sessionCode.includes('-')) {
+        baseSessionCode = sessionCode.split('-')[0];
+    }
+    console.log('Using base session code for storage:', baseSessionCode);
+    
+    // Get attendance data
+    const attendanceData = JSON.parse(localStorage.getItem('attendance_data'));
+    const dateKey = this.today;
+    
+    if (!attendanceData[dateKey]) {
+        attendanceData[dateKey] = {};
+    }
+    
+    if (!attendanceData[dateKey][baseSessionCode]) {
+        attendanceData[dateKey][baseSessionCode] = {
+            sessionInfo: session,
+            students: {}
+        };
+    }
+    
+    const studentData = attendanceData[dateKey][baseSessionCode].students[studentId];
         
         // Check if already checked in and not checked out
         if (studentData && studentData.checkIn && !studentData.checkOut) {
@@ -416,12 +423,12 @@ class AttendanceApp {
         
         // Record check-in
         const now = new Date();
-        if (!attendanceData[dateKey][sessionCode].students[studentId]) {
-            attendanceData[dateKey][sessionCode].students[studentId] = {};
+        if (!attendanceData[dateKey][baseSessionCode].students[studentId]) {
+            attendanceData[dateKey][baseSessionCode].students[studentId] = {};
         }
         
-        attendanceData[dateKey][sessionCode].students[studentId].checkIn = now.toISOString();
-        attendanceData[dateKey][sessionCode].students[studentId].checkOut = null;
+        attendanceData[dateKey][baseSessionCode].students[studentId].checkIn = now.toISOString();
+        attendanceData[dateKey][baseSessionCode].students[studentId].checkOut = null;
         
         localStorage.setItem('attendance_data', JSON.stringify(attendanceData));
         

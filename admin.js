@@ -231,8 +231,10 @@ class AttendanceAdmin {
         }
 
         // Ensure QRCode library is available, then try to render QR
+        console.log('🔄 Attempting to load QR library...');
         try {
             await this.loadQRCodeLibIfNeeded();
+            console.log('✅ QR library loaded, generating QR code...');
             // Generate QR code
             QRCode.toCanvas(canvas, qrData, {
                 width: 200,
@@ -242,8 +244,9 @@ class AttendanceAdmin {
                     light: '#FFFFFF'
                 }
             });
+            console.log('✅ QR code rendered to canvas');
         } catch (e) {
-            console.warn('QR unavailable, using link fallback only:', e);
+            console.warn('❌ QR unavailable, using link fallback only:', e);
             const ctx = canvas.getContext && canvas.getContext('2d');
             if (ctx) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -272,9 +275,11 @@ class AttendanceAdmin {
     loadQRCodeLibIfNeeded() {
         return new Promise((resolve, reject) => {
             if (typeof QRCode !== 'undefined') {
+                console.log('📦 QRCode already available');
                 resolve();
                 return;
             }
+            console.log('📦 Loading QRCode library...');
             const sources = [
                 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
                 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js',
@@ -282,27 +287,37 @@ class AttendanceAdmin {
                 'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js'
             ];
             const tryNext = (idx) => {
-                if (typeof QRCode !== 'undefined') { resolve(); return; }
+                if (typeof QRCode !== 'undefined') { 
+                    console.log('✅ QRCode now available');
+                    resolve(); 
+                    return; 
+                }
                 if (idx >= sources.length) {
+                    console.error('❌ All QRCode CDNs failed');
                     reject(new Error('All QRCode CDNs failed'));
                     return;
                 }
                 const url = sources[idx] + `?v=${Date.now()}`;
+                console.log(`📦 Trying QRCode source ${idx + 1}/${sources.length}: ${url}`);
                 const script = document.createElement('script');
                 script.src = url;
                 script.async = true;
                 script.crossOrigin = 'anonymous';
                 script.onload = () => {
+                    console.log(`✅ Script loaded from ${url}`);
                     // Give the browser a tick to register global
                     setTimeout(() => {
                         if (typeof QRCode !== 'undefined') {
+                            console.log('✅ QRCode global now available');
                             resolve();
                         } else {
+                            console.warn(`❌ Script loaded but QRCode not defined from ${url}`);
                             tryNext(idx + 1);
                         }
-                    }, 0);
+                    }, 100);
                 };
                 script.onerror = () => {
+                    console.error(`❌ Script failed to load from ${url}`);
                     // Try next source
                     tryNext(idx + 1);
                 };
@@ -310,9 +325,10 @@ class AttendanceAdmin {
                 // Also set a timeout in case onerror doesn't fire
                 setTimeout(() => {
                     if (typeof QRCode === 'undefined') {
+                        console.warn(`⏰ Timeout loading from ${url}, trying next...`);
                         tryNext(idx + 1);
                     }
-                }, 3000);
+                }, 5000);
             };
             tryNext(0);
         });
