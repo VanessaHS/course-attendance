@@ -311,8 +311,12 @@ class AttendanceAdmin {
         // Create a much shorter URL using just session code and rotation
         const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
         
-        // Remove course name from QR to save space - mobile will get it from session data
-        let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}`;
+        // Include shortened course name in QR (first 12 chars for better UX)
+        const shortCourseName = this.currentSession.courseName.length > 12 
+            ? this.currentSession.courseName.substring(0, 12) 
+            : this.currentSession.courseName;
+            
+        let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(shortCourseName)}`;
         
         // Check if GitHub token is available
         const hasToken = window.githubStorage && window.githubStorage.getToken();
@@ -326,9 +330,10 @@ class AttendanceAdmin {
             console.log('⚠️ No GitHub token - QR code will be local-only');
         }
         
-        // Debug: Log URL length
+        // Debug: Log URL length and course name
         console.log('📏 QR URL length:', qrData.length);
         console.log('🔗 QR URL:', qrData);
+        console.log('📚 Course name:', `"${this.currentSession.courseName}" → "${shortCourseName}" (${shortCourseName.length} chars)`);
         console.log('📚 QRCode library available:', typeof QRCode !== 'undefined');
         console.log('📚 QRErrorCorrectLevel available:', typeof QRErrorCorrectLevel !== 'undefined');
         

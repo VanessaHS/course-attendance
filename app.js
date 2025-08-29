@@ -702,8 +702,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const courseNameElement = courseDisplay.querySelector('.course-name');
                 if (courseNameElement) {
                     const decodedCourseName = decodeURIComponent(courseName);
-                    courseNameElement.textContent = decodedCourseName;
-                    console.log('✅ Course name displayed:', decodedCourseName);
+                    // Add ellipsis if course name was truncated
+                    const displayName = decodedCourseName.length >= 12 ? decodedCourseName + '...' : decodedCourseName;
+                    courseNameElement.textContent = displayName;
+                    console.log('✅ Course name displayed:', `"${decodedCourseName}" → "${displayName}"`);
                 }
                 courseDisplay.style.display = 'block';
             }
