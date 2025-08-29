@@ -109,9 +109,16 @@ class AttendanceAdmin {
             console.error('❌ GitHub save button NOT found');
         }
         
-        // Settings
-        document.getElementById('anonymous-mode').addEventListener('change', () => this.saveSettings());
-        document.getElementById('auto-delete').addEventListener('change', () => this.saveSettings());
+        // Settings (check if elements exist first)
+        const anonymousModeEl = document.getElementById('anonymous-mode');
+        const autoDeleteEl = document.getElementById('auto-delete');
+        
+        if (anonymousModeEl) {
+            anonymousModeEl.addEventListener('change', () => this.saveSettings());
+        }
+        if (autoDeleteEl) {
+            autoDeleteEl.addEventListener('change', () => this.saveSettings());
+        }
         
         // Start boundary-aligned refresh system
         this.startBoundaryScheduler();
@@ -856,9 +863,12 @@ class AttendanceAdmin {
     }
 
     saveSettings() {
+        const anonymousModeEl = document.getElementById('anonymous-mode');
+        const autoDeleteEl = document.getElementById('auto-delete');
+        
         const settings = {
-            anonymousMode: document.getElementById('anonymous-mode').checked,
-            autoDelete: document.getElementById('auto-delete').checked
+            anonymousMode: anonymousModeEl ? anonymousModeEl.checked : false,
+            autoDelete: autoDeleteEl ? autoDeleteEl.checked : false
         };
         
         localStorage.setItem('admin_settings', JSON.stringify(settings));
@@ -868,8 +878,15 @@ class AttendanceAdmin {
     loadSettings() {
         const settings = JSON.parse(localStorage.getItem('admin_settings') || '{}');
         
-        document.getElementById('anonymous-mode').checked = settings.anonymousMode || false;
-        document.getElementById('auto-delete').checked = settings.autoDelete || false;
+        const anonymousModeEl = document.getElementById('anonymous-mode');
+        const autoDeleteEl = document.getElementById('auto-delete');
+        
+        if (anonymousModeEl) {
+            anonymousModeEl.checked = settings.anonymousMode || false;
+        }
+        if (autoDeleteEl) {
+            autoDeleteEl.checked = settings.autoDelete || false;
+        }
     }
 
     showManualCheckout() {
