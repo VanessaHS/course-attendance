@@ -639,10 +639,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const fullToken = localStorage.getItem(`token_${tokenKey}`);
             if (fullToken) {
                 window.githubStorage.setToken(fullToken);
-                console.log('✅ GitHub token loaded using key from QR code');
+                console.log('✅ GitHub token loaded using key from QR code:', tokenKey);
                 tokenFound = true;
             } else {
-                console.log('⚠️ Token key found but no matching token in localStorage');
+                console.log('⚠️ Token key found but no matching token in localStorage:', tokenKey);
+                console.log('🔍 Available token keys:', Object.keys(localStorage).filter(k => k.startsWith('token_')));
             }
         }
         

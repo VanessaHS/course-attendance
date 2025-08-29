@@ -311,9 +311,9 @@ class AttendanceAdmin {
         // Create a much shorter URL using just session code and rotation
         const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
         
-        // Shorten course name for QR code (max 15 chars to prevent overflow)
-        const shortCourseName = this.currentSession.courseName.length > 15 
-            ? this.currentSession.courseName.substring(0, 15) 
+        // Shorten course name for QR code (max 8 chars to prevent overflow)
+        const shortCourseName = this.currentSession.courseName.length > 8 
+            ? this.currentSession.courseName.substring(0, 8) 
             : this.currentSession.courseName;
             
         let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(shortCourseName)}`;
@@ -324,8 +324,8 @@ class AttendanceAdmin {
         if (hasToken) {
             // Add sync flag and a shortened token for mobile devices
             const fullToken = window.githubStorage.getToken();
-            // Use only last 8 characters of token as a key for mobile to identify the token
-            const tokenKey = fullToken.substring(fullToken.length - 8);
+            // Use only last 6 characters of token as a key for mobile to identify the token
+            const tokenKey = fullToken.substring(fullToken.length - 6);
             qrData += `&sync=1&key=${tokenKey}`;
             console.log('✅ Added GitHub sync flag and token key to QR code');
             
@@ -379,7 +379,7 @@ class AttendanceAdmin {
                     height: 200,
                     colorDark: '#000000',
                     colorLight: '#ffffff',
-                    correctLevel: QRErrorCorrectLevel.M
+                    correctLevel: QRErrorCorrectLevel.L  // Lower error correction = more data capacity
                 });
                 
                 console.log('🎨 QR Code colors: Dark=#000000 (black), Light=#ffffff (white)');
