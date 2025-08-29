@@ -244,11 +244,17 @@ class AttendanceAdmin {
             const sessionBanner = document.getElementById('session-code-banner');
             const studentLinkSection = document.getElementById('student-link-section');
             const securityFeaturesSection = document.getElementById('security-features-section');
+            const footerStudentLink = document.getElementById('footer-student-link');
             
             if (qrDisplay) qrDisplay.style.display = 'none';
             if (sessionBanner) sessionBanner.style.display = 'none';
             if (studentLinkSection) studentLinkSection.style.display = 'none';
             if (securityFeaturesSection) securityFeaturesSection.style.display = 'none';
+            
+            // Reset footer link to basic student interface
+            if (footerStudentLink) {
+                footerStudentLink.href = 'index.html';
+            }
             
             // Stop all refresh intervals
             this.stopAllRefreshIntervals();
@@ -381,9 +387,17 @@ class AttendanceAdmin {
             console.error('❌ QR display element not found');
         }
         const studentLink = document.getElementById('student-link');
+        const footerStudentLink = document.getElementById('footer-student-link');
+        
         if (studentLink) {
             studentLink.href = qrData;
             studentLink.textContent = qrData;
+        }
+        
+        // Update footer link with session parameters
+        if (footerStudentLink) {
+            footerStudentLink.href = qrData;
+            console.log('✅ Footer student link updated with session parameters');
         }
 
         // Generate proper scannable QR code
