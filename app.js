@@ -624,20 +624,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const legacySession = urlParams.get('session'); // legacy
     const legacyRotation = urlParams.get('rotation'); // legacy
     
-    // Initialize GitHub storage with token from QR code
+    // Initialize GitHub storage with token from localStorage or QR code
     if (syncFlag === '1' && window.githubStorage) {
         if (qrToken) {
-            // Use token directly from QR code
+            // Use token directly from QR code (legacy support)
             window.githubStorage.setToken(qrToken);
             console.log('✅ GitHub token loaded from QR code');
         } else {
-            // Fallback to localStorage
+            // Primary method: Use token from localStorage (set by admin)
             const storedToken = localStorage.getItem('github_token');
             if (storedToken) {
                 window.githubStorage.setToken(storedToken);
                 console.log('✅ GitHub token loaded from localStorage');
             } else {
                 console.log('⚠️ No GitHub token available - using local-only mode');
+                console.log('💡 Admin should set up GitHub sync and share the token');
             }
         }
     }

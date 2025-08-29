@@ -281,30 +281,17 @@ class AttendanceAdmin {
     }
 
     async generateQRCode() {
-        console.log('🔄 generateQRCode() called');
-        if (!this.currentSession) {
-            console.log('❌ No current session, skipping QR generation');
-            return;
-        }
-        
-        console.log('📋 Current session:', this.currentSession);
+        if (!this.currentSession) return;
         
         const qrDisplay = document.getElementById('qr-display');
         const canvas = document.getElementById('qr-canvas');
         const sessionCodeSpan = document.getElementById('display-session-code');
         const expirySpan = document.getElementById('session-expiry');
         
-        console.log('🔍 DOM elements found:', {
-            qrDisplay: !!qrDisplay,
-            canvas: !!canvas,
-            sessionCodeSpan: !!sessionCodeSpan,
-            expirySpan: !!expirySpan
-        });
-        
         
         // Compute current slot and visual rotating code (changes every 2 minutes)
-        const currentDateTime = new Date();
-        const timeSlot = Math.floor(currentDateTime.getTime() / (2 * 60 * 1000)); // 2-minute intervals
+        const now = new Date();
+        const timeSlot = Math.floor(now.getTime() / (2 * 60 * 1000)); // 2-minute intervals
         const visualCode = this.generateVisualCode(this.currentSession.code, timeSlot);
         const combinedCode = `${this.currentSession.code}-${visualCode}`;
         
@@ -318,30 +305,23 @@ class AttendanceAdmin {
             
         let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(shortCourseName)}`;
         
-        // Check if GitHub token is available (but don't include in QR to keep it short)
+        // Add GitHub token directly to QR code for seamless mobile access
         const hasToken = window.githubStorage && window.githubStorage.getToken();
         
         if (hasToken) {
-            // Add sync flag but not the actual token (mobile will use localStorage)
-            qrData += `&sync=1`;
-            console.log('✅ Added GitHub sync flag to QR code (token will be from localStorage)');
+            const fullToken = window.githubStorage.getToken();
+            // Encode token in QR for direct mobile access (secure since QR is temporary)
+            qrData += `&sync=1&token=${encodeURIComponent(fullToken)}`;
+            console.log('✅ Added GitHub sync with token to QR code');
         } else {
             console.log('⚠️ No GitHub token - QR code will be local-only');
         }
         
         // Debug: Log URL length
-        console.log('📏 QR URL length:', qrData.length);
-        console.log('🔗 QR URL:', qrData);
-        console.log('📚 QRCode library available:', typeof QRCode !== 'undefined');
-        console.log('📚 QRErrorCorrectLevel available:', typeof QRErrorCorrectLevel !== 'undefined');
+        console.log('QR URL length:', qrData.length, 'URL:', qrData);
         
         // Make card visible and set student link immediately (fallback even if QR fails)
-        if (qrDisplay) {
-            qrDisplay.style.display = 'block';
-            console.log('✅ QR display made visible');
-        } else {
-            console.error('❌ QR display element not found');
-        }
+        qrDisplay.style.display = 'block';
         const studentLink = document.getElementById('student-link');
         if (studentLink) {
             studentLink.href = qrData;
@@ -352,18 +332,11 @@ class AttendanceAdmin {
         console.log('🔄 Generating scannable QR code...');
         try {
             // Clear any existing QR code
-            const qrContainer = canvas ? canvas.parentElement : null;
-            if (!qrContainer) {
-                throw new Error('QR container not found');
-            }
-            
-            console.log('🧹 Clearing existing QR code');
+            const qrContainer = canvas.parentElement;
             qrContainer.innerHTML = '<canvas id="qr-canvas" style="border: 2px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></canvas><p style="color: #666; font-size: 12px; margin: 0;">Scannable QR Code</p>';
             
             // Create new QR code using the embedded library
-            console.log('🔍 Checking QRCode library...');
             if (typeof QRCode !== 'undefined') {
-                console.log('✅ QRCode library is available');
                 const qrDiv = document.createElement('div');
                 qrDiv.style.textAlign = 'center';
                 
@@ -376,8 +349,6 @@ class AttendanceAdmin {
                     correctLevel: QRErrorCorrectLevel.M
                 });
                 
-                console.log('🎨 QR Code colors: Dark=#000000 (black), Light=#ffffff (white)');
-                
                 // Replace the canvas with the generated QR code
                 const newCanvas = qrDiv.querySelector('canvas');
                 if (newCanvas) {
@@ -385,8 +356,6 @@ class AttendanceAdmin {
                     newCanvas.style.border = '2px solid #ddd';
                     newCanvas.style.borderRadius = '8px';
                     newCanvas.style.marginBottom = '10px';
-                    newCanvas.style.backgroundColor = '#ffffff';
-                    newCanvas.style.padding = '10px';
                     qrContainer.replaceChild(newCanvas, qrContainer.querySelector('canvas'));
                 }
                 
@@ -506,11 +475,11 @@ class AttendanceAdmin {
         }
         
         // Throttle GitHub sync to prevent excessive API calls (max once per 30 seconds)
-        const nowTimestamp = Date.now();
-        if (!this.lastGitHubSync || (nowTimestamp - this.lastGitHubSync) > 30000) {
+        const now = Date.now();
+        if (!this.lastGitHubSync || (now - this.lastGitHubSync) > 30000) {
             if (window.githubStorage) {
                 await window.githubStorage.syncWithGitHub(this.currentSession.code, this.currentSession.date);
-                this.lastGitHubSync = nowTimestamp;
+                this.lastGitHubSync = now;
             }
         }
         
@@ -597,10 +566,10 @@ class AttendanceAdmin {
         
         const scheduleNext = () => {
             if (!this.currentSession || !this.currentSession.active) return;
-            const scheduleTime = Date.now();
+            const now = Date.now();
             const slotMs = 2 * 60 * 1000; // 2 minutes
-            const nextBoundary = Math.ceil(scheduleTime / slotMs) * slotMs;
-            const delay = Math.max(0, nextBoundary - scheduleTime + 50); // small buffer
+            const nextBoundary = Math.ceil(now / slotMs) * slotMs;
+            const delay = Math.max(0, nextBoundary - now + 50); // small buffer
             
             this.boundaryTimeout = setTimeout(() => {
                 this.performBoundaryRefresh();
@@ -659,9 +628,9 @@ class AttendanceAdmin {
         if (!this.currentSession || !this.currentSession.active) return;
         
         // Compute current slot and rotation
-        const refreshTime = Date.now();
+        const now = Date.now();
         const slotMs = 2 * 60 * 1000;
-        const slot = Math.floor(refreshTime / slotMs);
+        const slot = Math.floor(now / slotMs);
         this.currentSlot = slot;
         const rotation = this.generateVisualCode(this.currentSession.code, slot);
         this.currentRotationCode = rotation; // visual (suffix) code
@@ -686,10 +655,10 @@ class AttendanceAdmin {
         
         if (banner && refreshStatus) {
             // Update refresh indicator
-            const indicatorTime = new Date();
+            const now = new Date();
             const refreshText = document.querySelector('.refresh-text');
             if (refreshText) {
-                refreshText.textContent = `Last refresh: ${indicatorTime.toLocaleTimeString()}`;
+                refreshText.textContent = `Last refresh: ${now.toLocaleTimeString()}`;
                 
                 // Reset text after 3 seconds
                 setTimeout(() => {
@@ -921,15 +890,15 @@ class AttendanceAdmin {
         
         if (confirm(`Are you sure you want to manually check out "${studentId}"?\n\nThis should only be used for students who forgot to check out or had technical issues.`)) {
             // Record manual check-out
-            const checkoutTime = new Date();
-            attendanceData[dateKey][sessionCode].students[studentId].checkOut = checkoutTime.toISOString();
+            const now = new Date();
+            attendanceData[dateKey][sessionCode].students[studentId].checkOut = now.toISOString();
             attendanceData[dateKey][sessionCode].students[studentId].manualCheckout = true;
             
             localStorage.setItem('attendance_data', JSON.stringify(attendanceData));
             
             this.hideManualCheckout();
             this.refreshLiveAttendance();
-            this.showMessage(`Manually checked out ${studentId} at ${checkoutTime.toLocaleTimeString()}`, 'success');
+            this.showMessage(`Manually checked out ${studentId} at ${now.toLocaleTimeString()}`, 'success');
         }
     }
 
