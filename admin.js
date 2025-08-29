@@ -318,13 +318,19 @@ class AttendanceAdmin {
             
         let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(shortCourseName)}`;
         
-        // Check if GitHub token is available (but don't include in QR to keep it short)
+        // Check if GitHub token is available
         const hasToken = window.githubStorage && window.githubStorage.getToken();
         
         if (hasToken) {
-            // Add sync flag but not the actual token (mobile will use localStorage)
-            qrData += `&sync=1`;
-            console.log('✅ Added GitHub sync flag to QR code (token will be from localStorage)');
+            // Add sync flag and a shortened token for mobile devices
+            const fullToken = window.githubStorage.getToken();
+            // Use only last 8 characters of token as a key for mobile to identify the token
+            const tokenKey = fullToken.substring(fullToken.length - 8);
+            qrData += `&sync=1&key=${tokenKey}`;
+            console.log('✅ Added GitHub sync flag and token key to QR code');
+            
+            // Store the full token in localStorage with the key for mobile lookup
+            localStorage.setItem(`token_${tokenKey}`, fullToken);
         } else {
             console.log('⚠️ No GitHub token - QR code will be local-only');
         }
