@@ -3,6 +3,7 @@ class AttendanceAdmin {
     constructor() {
         this.currentSession = null;
         this.refreshInterval = null;
+        this.lastGitHubSync = 0; // Throttle GitHub API calls
         this.initializeAdmin();
         this.setupEventListeners();
         this.loadCurrentSession();
@@ -399,9 +400,13 @@ class AttendanceAdmin {
             return;
         }
         
-        // First try to sync with GitHub
-        if (window.githubStorage) {
-            await window.githubStorage.syncWithGitHub(this.currentSession.code, this.currentSession.date);
+        // Throttle GitHub sync to prevent excessive API calls (max once per 30 seconds)
+        const now = Date.now();
+        if (!this.lastGitHubSync || (now - this.lastGitHubSync) > 30000) {
+            if (window.githubStorage) {
+                await window.githubStorage.syncWithGitHub(this.currentSession.code, this.currentSession.date);
+                this.lastGitHubSync = now;
+            }
         }
         
         const attendanceData = JSON.parse(localStorage.getItem('attendance_data') || '{}');

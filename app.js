@@ -483,6 +483,9 @@ class AttendanceApp {
         this.showMessage(`✅ Successfully checked in at ${now.toLocaleTimeString()}`, 'success');
         this.loadTodayAttendance();
         
+        // Clear session code after successful check-in
+        document.getElementById('session-code').value = '';
+        
         } catch (error) {
             console.error('Check-in error:', error);
             this.showMessage(`Error during check-in: ${error.message}. Please try again.`, 'error');
