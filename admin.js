@@ -69,15 +69,24 @@ class AttendanceAdmin {
         } else {
             console.error('❌ End session button NOT found');
         }
-        document.getElementById('refresh-btn').addEventListener('click', () => this.refreshLiveAttendance());
-        document.getElementById('load-history-btn').addEventListener('click', () => this.loadAttendanceHistory());
-        document.getElementById('export-btn').addEventListener('click', () => this.exportData());
-        document.getElementById('clear-data-btn').addEventListener('click', () => this.clearOldData());
+        // Add null checks for all remaining elements
+        const refreshBtn = document.getElementById('refresh-btn');
+        const loadHistoryBtn = document.getElementById('load-history-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const clearDataBtn = document.getElementById('clear-data-btn');
+        const manualCheckoutBtn = document.getElementById('manual-checkout-btn');
+        const confirmManualCheckoutBtn = document.getElementById('confirm-manual-checkout');
+        const cancelManualCheckoutBtn = document.getElementById('cancel-manual-checkout');
+        
+        if (refreshBtn) refreshBtn.addEventListener('click', () => this.refreshLiveAttendance());
+        if (loadHistoryBtn) loadHistoryBtn.addEventListener('click', () => this.loadAttendanceHistory());
+        if (exportBtn) exportBtn.addEventListener('click', () => this.exportData());
+        if (clearDataBtn) clearDataBtn.addEventListener('click', () => this.clearOldData());
         
         // Manual check-out functionality
-        document.getElementById('manual-checkout-btn').addEventListener('click', () => this.showManualCheckout());
-        document.getElementById('confirm-manual-checkout').addEventListener('click', () => this.performManualCheckout());
-        document.getElementById('cancel-manual-checkout').addEventListener('click', () => this.hideManualCheckout());
+        if (manualCheckoutBtn) manualCheckoutBtn.addEventListener('click', () => this.showManualCheckout());
+        if (confirmManualCheckoutBtn) confirmManualCheckoutBtn.addEventListener('click', () => this.performManualCheckout());
+        if (cancelManualCheckoutBtn) cancelManualCheckoutBtn.addEventListener('click', () => this.hideManualCheckout());
         
         // GitHub setup functionality
         console.log('🔧 Setting up GitHub button listeners...');
@@ -229,9 +238,13 @@ class AttendanceAdmin {
             
             this.currentSession = null;
             this.displayCurrentSession();
-            document.getElementById('qr-display').style.display = 'none';
-            // Hide the session banner
-            document.getElementById('session-code-banner').style.display = 'none';
+            
+            // Hide the QR display and session banner safely
+            const qrDisplay = document.getElementById('qr-display');
+            const sessionBanner = document.getElementById('session-code-banner');
+            
+            if (qrDisplay) qrDisplay.style.display = 'none';
+            if (sessionBanner) sessionBanner.style.display = 'none';
             
             // Stop all refresh intervals
             this.stopAllRefreshIntervals();
@@ -340,11 +353,16 @@ class AttendanceAdmin {
         console.log('📚 QRCode library available:', typeof QRCode !== 'undefined');
         console.log('📚 QRErrorCorrectLevel available:', typeof QRErrorCorrectLevel !== 'undefined');
         
-        // Make card visible and set student link immediately (fallback even if QR fails)
-        if (qrDisplay) {
-            qrDisplay.style.display = 'block';
-            console.log('✅ QR display made visible');
+        // Make banner visible and set student link immediately (fallback even if QR fails)
+        const sessionBanner = document.getElementById('session-code-banner');
+        if (sessionBanner) {
+            sessionBanner.style.display = 'block';
+            console.log('✅ Session banner made visible');
         } else {
+            console.error('❌ Session banner element not found');
+        }
+        
+        if (!qrDisplay) {
             console.error('❌ QR display element not found');
         }
         const studentLink = document.getElementById('student-link');
