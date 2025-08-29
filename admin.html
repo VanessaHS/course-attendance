@@ -13,32 +13,34 @@
 <body>
     <div class="container">
         <!-- Student Check-In Access Banner -->
-        <div id="session-code-banner" class="session-banner qr-display-banner" style="display: none; background: #1a237e;">
+        <div id="session-code-banner" class="session-banner qr-display-banner" style="display: none; background: #1a237e; padding: 15px;">
         <div id="qr-display" style="display: contents;">
             <div class="current-code-display">
-                <div class="banner-header">
-                    <h2 style="color: white;">📱 Student Check-In Access</h2>
-                    <div class="refresh-status" id="refresh-status">
+                <div class="banner-header" style="margin-bottom: 8px;">
+                    <h2 style="color: white; font-size: 18px; margin: 0;">📱 Student Check-In Access</h2>
+                    <div class="refresh-status" id="refresh-status" style="font-size: 12px;">
                         <span class="refresh-indicator">🔄</span>
                         <span class="refresh-text">Auto-refreshing every 10s</span>
                     </div>
                 </div>
                 
-                <!-- Compact QR Code and Session Info -->
-                <div style="display: flex; align-items: center; gap: 20px; margin-top: 10px;">
-                    <div class="qr-container" style="flex-shrink: 0;">
-                        <div style="text-align: center;">
-                            <canvas id="qr-canvas" style="border: 2px solid white; border-radius: 8px; margin-bottom: 5px; background: white;"></canvas>
-                            <p style="color: rgba(255,255,255,0.8); font-size: 11px; margin: 0;">Scan to check-in</p>
-                        </div>
+                <!-- Ultra-Compact QR Code and Session Info -->
+                <div style="display: flex; align-items: center; gap: 15px; margin: 5px 0;">
+                    <div style="flex-shrink: 0;">
+                        <canvas id="qr-canvas" style="border: 1px solid white; border-radius: 4px; background: white; width: 80px; height: 80px;"></canvas>
                     </div>
                     
-                    <div class="session-details" style="flex: 1; color: white;">
-                        <div class="session-code-large" id="banner-session-code" style="color: white; margin-bottom: 8px;">No Active Session</div>
-                        <p style="color: rgba(255,255,255,0.9); margin: 3px 0; font-size: 14px;"><strong>Manual Code:</strong> <span id="display-session-code"></span></p>
-                        <p style="color: rgba(255,255,255,0.9); margin: 3px 0; font-size: 14px;"><strong>Next Rotation:</strong> <span id="session-expiry"></span></p>
-                        <div class="next-rotation" id="banner-next-rotation" style="color: rgba(255,255,255,0.8); font-size: 13px;"></div>
-                        <div class="next-rotation" id="slot-details" style="margin-top:4px; opacity:0.8; color: rgba(255,255,255,0.7); font-size: 12px;">
+                    <div style="flex: 1; color: white; font-size: 14px; line-height: 1.3;">
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 4px;">
+                            <span style="font-weight: 600; font-size: 16px;">Session:</span>
+                            <span id="banner-session-code" style="font-family: monospace; font-weight: 700; font-size: 18px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px;">No Active Session</span>
+                        </div>
+                        <div style="display: flex; gap: 20px; font-size: 13px; opacity: 0.9;">
+                            <span><strong>Manual Code:</strong> <span id="display-session-code" style="font-family: monospace;"></span></span>
+                            <span><strong>Next Rotation:</strong> <span id="session-expiry"></span></span>
+                        </div>
+                        <div id="banner-next-rotation" style="font-size: 12px; opacity: 0.8; margin-top: 2px;"></div>
+                        <div id="slot-details" style="font-size: 11px; opacity: 0.7; margin-top: 2px;">
                             <span id="slot-index"></span>
                             <span> • </span>
                             <span id="slot-rotation"></span>
