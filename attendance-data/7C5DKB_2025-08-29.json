@@ -1,5 +1,11 @@
 {
   "students": {
+    "202020": {
+      "checkIn": "2025-08-29T17:10:17.449Z",
+      "checkOut": null,
+      "device": "mobile",
+      "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac"
+    },
     "238644": {
       "checkIn": "2025-08-29T16:56:05.374Z",
       "checkOut": null,
