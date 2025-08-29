@@ -239,12 +239,16 @@ class AttendanceAdmin {
             this.currentSession = null;
             this.displayCurrentSession();
             
-            // Hide the QR display and session banner safely
+            // Hide the QR display, session banner, and bottom sections safely
             const qrDisplay = document.getElementById('qr-display');
             const sessionBanner = document.getElementById('session-code-banner');
+            const studentLinkSection = document.getElementById('student-link-section');
+            const securityFeaturesSection = document.getElementById('security-features-section');
             
             if (qrDisplay) qrDisplay.style.display = 'none';
             if (sessionBanner) sessionBanner.style.display = 'none';
+            if (studentLinkSection) studentLinkSection.style.display = 'none';
+            if (securityFeaturesSection) securityFeaturesSection.style.display = 'none';
             
             // Stop all refresh intervals
             this.stopAllRefreshIntervals();
@@ -353,13 +357,24 @@ class AttendanceAdmin {
         console.log('📚 QRCode library available:', typeof QRCode !== 'undefined');
         console.log('📚 QRErrorCorrectLevel available:', typeof QRErrorCorrectLevel !== 'undefined');
         
-        // Make banner visible and set student link immediately (fallback even if QR fails)
+        // Make banner and bottom sections visible
         const sessionBanner = document.getElementById('session-code-banner');
+        const studentLinkSection = document.getElementById('student-link-section');
+        const securityFeaturesSection = document.getElementById('security-features-section');
+        
         if (sessionBanner) {
             sessionBanner.style.display = 'block';
             console.log('✅ Session banner made visible');
         } else {
             console.error('❌ Session banner element not found');
+        }
+        
+        if (studentLinkSection) {
+            studentLinkSection.style.display = 'block';
+        }
+        
+        if (securityFeaturesSection) {
+            securityFeaturesSection.style.display = 'block';
         }
         
         if (!qrDisplay) {
