@@ -400,15 +400,16 @@ header p {
 }
 
 .session-active {
-    background: #ecfdf5;
-    border: 1px solid #10b981;
+    background: #fef3c7;
+    border: 2px solid var(--dark-red);
     border-radius: var(--radius-md);
     padding: var(--space-lg);
 }
 
 .session-active p {
     margin-bottom: var(--space-sm);
-    color: var(--gray-700);
+    color: var(--navy-blue);
+    font-weight: 500;
 }
 
 .session-active code {

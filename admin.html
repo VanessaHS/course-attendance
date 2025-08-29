@@ -12,25 +12,69 @@
 </head>
 <body>
     <div class="container">
-        <!-- Prominent Session Code Display -->
-        <div id="session-code-banner" class="session-banner" style="display: none;">
+        <!-- Student Check-In Access Banner -->
+        <div id="session-code-banner" class="session-banner" style="display: none; background: #1a237e;">
             <div class="current-code-display">
                 <div class="banner-header">
-                    <h2>Current Session Code:</h2>
+                    <h2 style="color: white;">📱 Student Check-In Access</h2>
                     <div class="refresh-status" id="refresh-status">
                         <span class="refresh-indicator">🔄</span>
                         <span class="refresh-text">Auto-refreshing every 10s</span>
                     </div>
                 </div>
-                <div class="session-code-large" id="banner-session-code">No Active Session</div>
-                <div class="next-rotation" id="banner-next-rotation"></div>
-                <div class="next-rotation" id="slot-details" style="margin-top:6px; opacity:0.9;">
-                    <span id="slot-index"></span>
-                    <span> • </span>
-                    <span id="slot-rotation"></span>
-                    <span> • </span>
-                    <span id="last-rendered"></span>
+                
+                <!-- QR Code and Session Info in Banner -->
+                <div style="display: flex; align-items: center; gap: 30px; margin-top: 15px;">
+                    <div class="qr-container" style="flex-shrink: 0;">
+                        <div style="text-align: center;">
+                            <canvas id="qr-canvas" style="border: 2px solid white; border-radius: 8px; margin-bottom: 10px; background: white;"></canvas>
+                            <p style="color: rgba(255,255,255,0.8); font-size: 12px; margin: 0;">QR-like visual pattern</p>
+                        </div>
+                    </div>
+                    
+                    <div class="session-details" style="flex: 1; color: white;">
+                        <div class="session-code-large" id="banner-session-code" style="color: white; margin-bottom: 10px;">No Active Session</div>
+                        <p style="color: rgba(255,255,255,0.9); margin: 5px 0;"><strong>Session Code (manual entry):</strong> <span id="display-session-code"></span></p>
+                        <p style="color: rgba(255,255,255,0.9); margin: 5px 0;"><strong>Next Rotation:</strong> <span id="session-expiry"></span></p>
+                        <div class="next-rotation" id="banner-next-rotation" style="color: rgba(255,255,255,0.8);"></div>
+                        <div class="next-rotation" id="slot-details" style="margin-top:6px; opacity:0.9; color: rgba(255,255,255,0.7);">
+                            <span id="slot-index"></span>
+                            <span> • </span>
+                            <span id="slot-rotation"></span>
+                            <span> • </span>
+                            <span id="last-rendered"></span>
+                        </div>
+                        
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <h4 style="margin: 0 0 10px 0; color: white;">📲 For Students - Click this link:</h4>
+                            <a id="student-link" href="#" target="_blank" rel="noopener" style="
+                                display: block; 
+                                background: #4CAF50; 
+                                color: white; 
+                                padding: 15px; 
+                                text-decoration: none; 
+                                border-radius: 6px; 
+                                font-weight: bold;
+                                text-align: center;
+                                font-size: 16px;
+                            ">📱 OPEN CHECK-IN PAGE</a>
+                            <p style="margin: 10px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">
+                                Share this link via text message, email, or have students type the URL
+                            </p>
+                        </div>
+                    </div>
                 </div>
+                
+                <div class="security-info" style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                    <h4 style="color: white; margin: 0 0 10px 0;">🔒 Security Features Active:</h4>
+                    <ul style="color: rgba(255,255,255,0.9); margin: 0; padding-left: 20px;">
+                        <li>🔄 <strong>Auto-Rotating:</strong> Code changes every 2 minutes</li>
+                        <li>🎓 <strong>Student ID Required:</strong> Official Student ID numbers for tracking</li>
+                        <li>⏰ <strong>Minimum Stay:</strong> Students must wait 5 minutes before checking out</li>
+                        <li>🎯 <strong>Real-time Validation:</strong> Screenshots won't work for check-out</li>
+                    </ul>
+                </div>
+                <p class="instruction" style="color: rgba(255,255,255,0.9); margin-top: 10px; text-align: center;"><strong>Display this screen in your classroom.</strong> Students cannot use screenshots to check out remotely.</p>
             </div>
         </div>
 
@@ -67,50 +111,7 @@
             </div>
         </div>
 
-        <!-- QR Code Display -->
-        <div id="qr-display" class="card" style="display: none;">
-            <h2>📱 Student Check-In Access</h2>
-            <div class="qr-container">
-                <div style="text-align: center;">
-                    <canvas id="qr-canvas" style="border: 2px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></canvas>
-                    <p style="color: #666; font-size: 12px; margin: 0;">QR-like visual pattern</p>
-                </div>
-                <div class="session-details">
-                    <p><strong>Session Code (manual entry):</strong> <span id="display-session-code"></span></p>
-                    <p><strong>Next Rotation:</strong> <span id="session-expiry"></span></p>
-                    
-                    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                        <h4 style="margin: 0 0 10px 0; color: #2e7d32;">📲 For Students - Click this link:</h4>
-                        <a id="student-link" href="#" target="_blank" rel="noopener" style="
-                            display: block; 
-                            background: #4CAF50; 
-                            color: white; 
-                            padding: 15px; 
-                            text-decoration: none; 
-                            border-radius: 6px; 
-                            font-weight: bold;
-                            text-align: center;
-                            font-size: 16px;
-                        ">📱 OPEN CHECK-IN PAGE</a>
-                        <p style="margin: 10px 0 0 0; font-size: 12px; color: #555;">
-                            Share this link via text message, email, or have students type the URL
-                        </p>
-                    </div>
-                    
 
-                </div>
-            </div>
-            <div class="security-info">
-                <h4>🔒 Security Features Active:</h4>
-                <ul>
-                    <li>🔄 <strong>Auto-Rotating:</strong> Code changes every 2 minutes</li>
-                    <li>🎓 <strong>Student ID Required:</strong> Official Student ID numbers for tracking</li>
-                    <li>⏰ <strong>Minimum Stay:</strong> Students must wait 5 minutes before checking out</li>
-                    <li>🎯 <strong>Real-time Validation:</strong> Screenshots won't work for check-out</li>
-                </ul>
-            </div>
-            <p class="instruction"><strong>Display this screen in your classroom.</strong> Students cannot use screenshots to check out remotely.</p>
-        </div>
 
         <!-- Live Attendance -->
         <div class="card">
@@ -177,17 +178,7 @@
                 <button id="clear-data-btn" class="btn btn-warning">🗑️ Clear Old Data</button>
             </div>
 
-            <div class="privacy-section">
-                <h3>🔒 Privacy Settings</h3>
-                <label class="checkbox-label">
-                    <input type="checkbox" id="anonymous-mode">
-                    Allow anonymous check-ins (students can use nicknames)
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" id="auto-delete">
-                    Auto-delete data after 90 days
-                </label>
-            </div>
+
         </div>
 
         <footer>
