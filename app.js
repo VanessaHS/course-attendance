@@ -700,13 +700,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const courseDisplay = document.getElementById('course-display');
             if (courseDisplay) {
                 const courseNameElement = courseDisplay.querySelector('.course-name');
-                if (courseNameElement) {
-                    const decodedCourseName = decodeURIComponent(courseName);
-                    // Add ellipsis if course name was truncated
-                    const displayName = decodedCourseName.length >= 12 ? decodedCourseName + '...' : decodedCourseName;
-                    courseNameElement.textContent = displayName;
-                    console.log('✅ Course name displayed:', `"${decodedCourseName}" → "${displayName}"`);
-                }
+                        if (courseNameElement) {
+            const decodedCourseName = decodeURIComponent(courseName);
+            // Add ellipsis if course name was truncated
+            const displayName = decodedCourseName.length >= 10 ? decodedCourseName + '...' : decodedCourseName;
+            courseNameElement.textContent = displayName;
+            console.log('✅ Course name displayed:', `"${decodedCourseName}" → "${displayName}"`);
+        }
                 courseDisplay.style.display = 'block';
             }
         } else {

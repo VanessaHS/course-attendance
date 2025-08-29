@@ -311,9 +311,9 @@ class AttendanceAdmin {
         // Create a much shorter URL using just session code and rotation
         const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
         
-        // Include shortened course name in QR (first 12 chars for better UX)
-        const shortCourseName = this.currentSession.courseName.length > 12 
-            ? this.currentSession.courseName.substring(0, 12) 
+                // Include shortened course name in QR (first 10 chars for better UX)
+        const shortCourseName = this.currentSession.courseName.length > 10
+            ? this.currentSession.courseName.substring(0, 10)
             : this.currentSession.courseName;
             
         let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(shortCourseName)}`;
