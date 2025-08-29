@@ -311,26 +311,17 @@ class AttendanceAdmin {
         // Create a much shorter URL using just session code and rotation
         const baseUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html');
         
-        // Shorten course name for QR code (max 8 chars to prevent overflow)
-        const shortCourseName = this.currentSession.courseName.length > 8 
-            ? this.currentSession.courseName.substring(0, 8) 
-            : this.currentSession.courseName;
-            
-        let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}&c=${encodeURIComponent(shortCourseName)}`;
+        // Remove course name from QR to save space - mobile will get it from session data
+        let qrData = `${baseUrl}?s=${this.currentSession.code}&r=${visualCode}`;
         
         // Check if GitHub token is available
         const hasToken = window.githubStorage && window.githubStorage.getToken();
         
         if (hasToken) {
-            // Add sync flag and a shortened token for mobile devices
+            // Add the full token back to QR code for mobile sync (like it was working yesterday)
             const fullToken = window.githubStorage.getToken();
-            // Use only last 6 characters of token as a key for mobile to identify the token
-            const tokenKey = fullToken.substring(fullToken.length - 6);
-            qrData += `&sync=1&key=${tokenKey}`;
-            console.log('✅ Added GitHub sync flag and token key to QR code');
-            
-            // Store the full token in localStorage with the key for mobile lookup
-            localStorage.setItem(`token_${tokenKey}`, fullToken);
+            qrData += `&sync=1&token=${encodeURIComponent(fullToken)}`;
+            console.log('✅ Added GitHub sync with full token to QR code');
         } else {
             console.log('⚠️ No GitHub token - QR code will be local-only');
         }

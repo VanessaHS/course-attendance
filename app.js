@@ -619,47 +619,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const rotationCode = urlParams.get('r');     // rotation code  
     const courseName = urlParams.get('c');       // course name
     const syncFlag = urlParams.get('sync');      // GitHub sync flag
-    const qrToken = urlParams.get('token');      // GitHub token from QR (legacy)
-    const tokenKey = urlParams.get('key');       // Token key from QR (new method)
+    const qrToken = urlParams.get('token');      // GitHub token from QR
     const payloadB64 = urlParams.get('p');       // legacy base64 payload
     const legacySession = urlParams.get('session'); // legacy
     const legacyRotation = urlParams.get('rotation'); // legacy
     
-    // Initialize GitHub storage with token from various sources
+    // Initialize GitHub storage with token from QR code (back to working method)
     if (syncFlag === '1' && window.githubStorage) {
-        let tokenFound = false;
-        
         if (qrToken) {
-            // Use token directly from QR code (legacy support)
+            // Use token directly from QR code (the way it was working yesterday)
             window.githubStorage.setToken(qrToken);
-            console.log('✅ GitHub token loaded from QR code (legacy)');
-            tokenFound = true;
-        } else if (tokenKey) {
-            // New method: Use token key to lookup full token
-            const fullToken = localStorage.getItem(`token_${tokenKey}`);
-            if (fullToken) {
-                window.githubStorage.setToken(fullToken);
-                console.log('✅ GitHub token loaded using key from QR code:', tokenKey);
-                tokenFound = true;
-            } else {
-                console.log('⚠️ Token key found but no matching token in localStorage:', tokenKey);
-                console.log('🔍 Available token keys:', Object.keys(localStorage).filter(k => k.startsWith('token_')));
-            }
-        }
-        
-        if (!tokenFound) {
-            // Fallback: Use token from localStorage (set by admin)
+            console.log('✅ GitHub token loaded from QR code');
+        } else {
+            // Fallback to localStorage
             const storedToken = localStorage.getItem('github_token');
             if (storedToken) {
                 window.githubStorage.setToken(storedToken);
                 console.log('✅ GitHub token loaded from localStorage');
-                tokenFound = true;
+            } else {
+                console.log('⚠️ No GitHub token available - using local-only mode');
             }
-        }
-        
-        if (!tokenFound) {
-            console.log('⚠️ No GitHub token available - using local-only mode');
-            console.log('💡 Admin should set up GitHub sync and share the token');
         }
     }
     
@@ -736,7 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const activeSessions = JSON.parse(localStorage.getItem('active_sessions') || '{}');
         activeSessions[sessionCode] = {
             code: sessionCode,
-            courseName: courseName ? decodeURIComponent(courseName) : 'Course',
+            courseName: courseName ? decodeURIComponent(courseName) : 'Course Session',
             date: new Date().toISOString().split('T')[0],
             createdAt: new Date().toISOString(),
             expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).getTime(), // 4 hours from now
