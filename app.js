@@ -541,6 +541,55 @@ class AttendanceApp {
         
         localStorage.setItem('attendance_data', JSON.stringify(attendanceData));
         
+        console.log('Check-out successful - stored data:', {
+            sessionCode: baseSessionCode,
+            studentId: studentId,
+            date: dateKey,
+            attendanceData: attendanceData[dateKey][baseSessionCode]
+        });
+        
+        // Save to GitHub for cross-device sync
+        if (window.githubStorage) {
+            const token = window.githubStorage.getToken();
+            console.log('📤 Saving check-out to GitHub:', { baseSessionCode, studentId, hasToken: !!token });
+            
+            if (!token) {
+                console.error('❌ No GitHub token found on mobile - check-out will only save locally');
+                this.showMessage('⚠️ Check-out saved locally only. Admin needs to sync manually.', 'info');
+            } else {
+                try {
+                    console.log('📤 About to save check-out to GitHub:', {
+                        baseSessionCode,
+                        studentId,
+                        action: 'checkout',
+                        timestamp: now.toISOString(),
+                        expectedFileName: `${baseSessionCode}_${now.toISOString().split('T')[0]}.json`
+                    });
+                    
+                    window.githubStorage.saveAttendance(
+                        baseSessionCode, 
+                        studentId, 
+                        'checkout', 
+                        now.toISOString(),
+                        { device: 'mobile', userAgent: navigator.userAgent.substring(0, 50) }
+                    ).then(() => {
+                        console.log('✅ Check-out saved to GitHub successfully');
+                        const fileName = `${baseSessionCode}_${now.toISOString().split('T')[0]}.json`;
+                        this.showMessage(`✅ Check-out synced to GitHub: ${fileName}`, 'success');
+                    }).catch(error => {
+                        console.error('❌ Failed to save check-out to GitHub:', error);
+                        this.showMessage(`❌ GitHub sync failed: ${error.message}`, 'error');
+                    });
+                    
+                } catch (error) {
+                    console.error('❌ Failed to save check-out to GitHub:', error);
+                    this.showMessage(`❌ GitHub sync failed: ${error.message}`, 'error');
+                }
+            }
+        } else {
+            console.log('⚠️ GitHub storage not available');
+        }
+        
         this.showMessage(`🚪 Successfully checked out at ${now.toLocaleTimeString()}`, 'success');
         this.loadTodayAttendance();
     }
