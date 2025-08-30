@@ -599,11 +599,17 @@ class AttendanceAdmin {
             
             if (isPresent) currentlyPresent++;
             
-            let duration = 'Present';
+            let duration = '';
             if (checkOutTime) {
                 const durationMs = checkOutTime.getTime() - checkInTime.getTime();
                 const hours = Math.floor(durationMs / (1000 * 60 * 60));
                 const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+                duration = `${hours}h ${minutes}m`;
+            } else {
+                // Show current duration for present students
+                const currentMs = new Date().getTime() - checkInTime.getTime();
+                const hours = Math.floor(currentMs / (1000 * 60 * 60));
+                const minutes = Math.floor((currentMs % (1000 * 60 * 60)) / (1000 * 60));
                 duration = `${hours}h ${minutes}m`;
             }
             
