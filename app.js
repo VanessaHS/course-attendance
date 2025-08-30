@@ -510,29 +510,44 @@ class AttendanceApp {
         }
         
         postCheckInDiv.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-                <h2 style="color: #1a237e; font-size: 28px; margin-bottom: 20px;">✅ You're Checked In!</h2>
-                
-                <div style="background: #e8f5e8; border: 2px solid #4CAF50; border-radius: 12px; padding: 25px; margin: 20px 0;">
-                    <h3 style="color: #1a237e; margin: 0 0 15px 0;">Session Details</h3>
-                    <p style="margin: 8px 0; color: #1a237e;"><strong>Student ID:</strong> ${studentId}</p>
-                    <p style="margin: 8px 0; color: #1a237e;"><strong>Session:</strong> ${sessionCode}</p>
-                    <p style="margin: 8px 0; color: #1a237e;"><strong>Check-in Time:</strong> ${checkInTime.toLocaleTimeString()}</p>
-                </div>
-                
-                <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 25px; margin: 20px 0;">
-                    <h3 style="color: #dc2626; margin: 0 0 15px 0;">📱 When Ready to Leave:</h3>
-                    <p style="color: #1a237e; font-size: 18px; font-weight: 600; margin: 15px 0;">
-                        Scan the QR code displayed at the front of the classroom
-                    </p>
-                    <p style="color: #666; font-size: 14px; margin: 10px 0;">
-                        Do not use the manual entry method for check-out - codes expire every 2 minutes for security.
-                    </p>
-                </div>
-                
-
+            <div style="padding: 20px;">
+                <h2 style="color: #1a237e; font-size: 28px; margin-bottom: 20px; text-align: center;">✅ You're Checked In!</h2>
             </div>
         `;
+        
+        // Create session details banner (full width)
+        const sessionDetailsDiv = document.createElement('div');
+        sessionDetailsDiv.className = 'card';
+        sessionDetailsDiv.style.cssText = 'border: 2px solid #4CAF50; border-radius: 12px; background: #e8f5e8; margin-bottom: 20px;';
+        sessionDetailsDiv.innerHTML = `
+            <h3 style="color: #1a237e; margin: 0 0 15px 0; text-align: center;">Session Details</h3>
+            <div style="text-align: center;">
+                <p style="margin: 8px 0; color: #1a237e;"><strong>Student ID:</strong> ${studentId}</p>
+                <p style="margin: 8px 0; color: #1a237e;"><strong>Session:</strong> ${sessionCode}</p>
+                <p style="margin: 8px 0; color: #1a237e;"><strong>Check-in Time:</strong> ${checkInTime.toLocaleTimeString()}</p>
+            </div>
+        `;
+        
+        // Create check-out instructions banner (full width)
+        const checkoutInstructionsDiv = document.createElement('div');
+        checkoutInstructionsDiv.className = 'card';
+        checkoutInstructionsDiv.style.cssText = 'border: 2px solid #f59e0b; border-radius: 12px; background: #fef3c7; margin-bottom: 20px;';
+        checkoutInstructionsDiv.innerHTML = `
+            <h3 style="color: #dc2626; margin: 0 0 20px 0; text-align: center;">📱 When Ready to Leave:</h3>
+            <div style="text-align: center;">
+                <p style="color: #1a237e; font-size: 18px; font-weight: 600; margin: 0 0 20px 0;">
+                    Scan the QR code displayed at the front of the classroom
+                </p>
+                <button onclick="navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}}).then(stream => {alert('Camera ready! Point at QR code to scan'); stream.getTracks().forEach(track => track.stop());}).catch(err => alert('Camera not available: ' + err.message))" 
+                        style="background: #dc2626; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px;">
+                    📷 Open Camera to Scan QR Code
+                </button>
+            </div>
+        `;
+        
+        // Insert the new banners after the post-check-in div
+        postCheckInDiv.parentNode.insertBefore(sessionDetailsDiv, postCheckInDiv.nextSibling);
+        postCheckInDiv.parentNode.insertBefore(checkoutInstructionsDiv, sessionDetailsDiv.nextSibling);
         
         postCheckInDiv.style.display = 'block';
     }
