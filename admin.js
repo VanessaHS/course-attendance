@@ -410,7 +410,7 @@ class AttendanceAdmin {
             }
             
             console.log('🧹 Clearing existing QR code');
-            qrContainer.innerHTML = '<canvas id="qr-canvas" style="border: 2px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></canvas><p style="color: #666; font-size: 12px; margin: 0;">Scannable QR Code</p>';
+            qrContainer.innerHTML = '<canvas id="qr-canvas" style="border: 2px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></canvas>';
             
             // Create new QR code using the embedded library
             console.log('🔍 Checking QRCode library...');
