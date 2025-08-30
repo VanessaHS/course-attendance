@@ -483,6 +483,9 @@ class AttendanceApp {
         this.showMessage(`✅ Successfully checked in at ${now.toLocaleTimeString()}`, 'success');
         this.loadTodayAttendance();
         
+        // Transform UI to post-check-in state
+        this.showPostCheckInState(studentId, baseSessionCode, now);
+        
         // Clear session code after successful check-in
         document.getElementById('session-code').value = '';
         
@@ -490,6 +493,52 @@ class AttendanceApp {
             console.error('Check-in error:', error);
             this.showMessage(`Error during check-in: ${error.message}. Please try again.`, 'error');
         }
+    }
+
+    showPostCheckInState(studentId, sessionCode, checkInTime) {
+        // Hide the check-in form
+        const checkInForm = document.getElementById('check-in-form');
+        checkInForm.style.display = 'none';
+        
+        // Create and show post-check-in content
+        let postCheckInDiv = document.getElementById('post-check-in-content');
+        if (!postCheckInDiv) {
+            postCheckInDiv = document.createElement('div');
+            postCheckInDiv.id = 'post-check-in-content';
+            postCheckInDiv.className = 'card';
+            checkInForm.parentNode.insertBefore(postCheckInDiv, checkInForm.nextSibling);
+        }
+        
+        postCheckInDiv.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <h2 style="color: #1a237e; font-size: 28px; margin-bottom: 20px;">✅ You're Checked In!</h2>
+                
+                <div style="background: #e8f5e8; border: 2px solid #4CAF50; border-radius: 12px; padding: 25px; margin: 20px 0;">
+                    <h3 style="color: #1a237e; margin: 0 0 15px 0;">Session Details</h3>
+                    <p style="margin: 8px 0; color: #1a237e;"><strong>Student ID:</strong> ${studentId}</p>
+                    <p style="margin: 8px 0; color: #1a237e;"><strong>Session:</strong> ${sessionCode}</p>
+                    <p style="margin: 8px 0; color: #1a237e;"><strong>Check-in Time:</strong> ${checkInTime.toLocaleTimeString()}</p>
+                </div>
+                
+                <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 25px; margin: 20px 0;">
+                    <h3 style="color: #dc2626; margin: 0 0 15px 0;">📱 When Ready to Leave:</h3>
+                    <p style="color: #1a237e; font-size: 18px; font-weight: 600; margin: 15px 0;">
+                        Scan the QR code displayed at the front of the classroom
+                    </p>
+                    <p style="color: #666; font-size: 14px; margin: 10px 0;">
+                        Do not use the manual entry method for check-out - codes expire every 2 minutes for security.
+                    </p>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <button onclick="location.reload()" class="btn" style="background: #1a237e; color: white; padding: 12px 25px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+                        Return to Check-In Page
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        postCheckInDiv.style.display = 'block';
     }
 
     checkOut() {
