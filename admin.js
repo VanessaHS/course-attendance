@@ -467,11 +467,16 @@ class AttendanceAdmin {
             }
         }
         
-        sessionCodeSpan.textContent = `${combinedCode}`;
+        // Update session code display if element exists
+        if (sessionCodeSpan) {
+            sessionCodeSpan.textContent = `${combinedCode}`;
+        }
         
         // Show next rotation time
         const nextRotation = new Date((timeSlot + 1) * 2 * 60 * 1000);
-        expirySpan.textContent = `Next code: ${nextRotation.toLocaleTimeString()}`;
+        if (expirySpan) {
+            expirySpan.textContent = `Next code: ${nextRotation.toLocaleTimeString()}`;
+        }
         
         // Update the prominent banner display
         this.updateSessionBanner(`${combinedCode}`, nextRotation);
@@ -527,26 +532,19 @@ class AttendanceAdmin {
     updateSessionBanner(sessionCode, nextRotation) {
         const banner = document.getElementById('session-code-banner');
         const codeSpan = document.getElementById('banner-session-code');
-        const rotationSpan = document.getElementById('banner-next-rotation');
-        const slotIndexSpan = document.getElementById('slot-index');
-        const slotRotationSpan = document.getElementById('slot-rotation');
-        const lastRenderedSpan = document.getElementById('last-rendered');
+        const expirySpan = document.getElementById('session-expiry');
         
         if (this.currentSession) {
-            banner.style.display = 'block';
-            codeSpan.textContent = sessionCode;
-            rotationSpan.textContent = `Next rotation: ${nextRotation.toLocaleTimeString()}`;
-            if (typeof this.currentSlot !== 'undefined') {
-                slotIndexSpan.textContent = `slot=${this.currentSlot}`;
+            if (banner) banner.style.display = 'block';
+            if (codeSpan) {
+                codeSpan.textContent = sessionCode;
             }
-            if (this.currentRotationCode) {
-                slotRotationSpan.textContent = `rot=${this.currentRotationCode}`;
+            if (expirySpan) {
+                expirySpan.textContent = nextRotation.toLocaleTimeString();
             }
-            if (typeof this.lastRenderedSlot !== 'undefined') {
-                lastRenderedSpan.textContent = `last=${this.lastRenderedSlot}`;
-            }
+            console.log('✅ Banner updated with new code:', sessionCode, 'expires:', nextRotation.toLocaleTimeString());
         } else {
-            banner.style.display = 'none';
+            if (banner) banner.style.display = 'none';
         }
     }
 
