@@ -4,6 +4,22 @@ class AttendanceAdmin {
         this.currentSession = null;
         this.refreshInterval = null;
         this.lastGitHubSync = 0; // Throttle GitHub API calls
+        
+        // Security configuration
+        this.securityConfig = {
+            SESSION_TIMEOUT: 4 * 60 * 60 * 1000, // 4 hours
+            MAX_LOGIN_ATTEMPTS: 3,
+            LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutes
+            // This should be set via environment or deployment config
+            ADMIN_PASSWORD_HASH: 'cd31f6a785aef16da4ffa24982d819608257cdbeb40c42d1cdb7d3ba3aca7752' // Default: "hello"
+        };
+        
+        // Check authentication before initializing
+        if (!this.checkAuthentication()) {
+            this.showLoginInterface();
+            return;
+        }
+        
         this.initializeAdmin();
         this.setupEventListeners();
         this.loadCurrentSession();
@@ -129,11 +145,21 @@ class AttendanceAdmin {
             autoDeleteEl.addEventListener('change', () => this.saveSettings());
         }
         
+        // Logout button
+        const logoutBtn = document.getElementById('admin-logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => this.logout());
+            console.log('✅ Logout button listener added');
+        }
+        
         // Start boundary-aligned refresh system
         this.startBoundaryScheduler();
         
         // Add window focus/blur handling for better performance
         this.setupWindowEventHandlers();
+        
+        // Start session monitoring
+        this.startSessionMonitoring();
     }
 
     generateSessionCode() {
@@ -1093,6 +1119,348 @@ class AttendanceAdmin {
         statusDiv.style.background = type === 'success' ? '#d4edda' : '#f8d7da';
         statusDiv.style.color = type === 'success' ? '#155724' : '#721c24';
         statusDiv.style.border = `1px solid ${type === 'success' ? '#c3e6cb' : '#f5c6cb'}`;
+    }
+    
+    // ===== ADMIN AUTHENTICATION SYSTEM =====
+    
+    /**
+     * Check if user is authenticated and session is valid
+     */
+    checkAuthentication() {
+        const sessionData = localStorage.getItem('admin_session');
+        
+        if (!sessionData) {
+            console.log('🔒 No admin session found');
+            return false;
+        }
+        
+        try {
+            const session = JSON.parse(sessionData);
+            const now = Date.now();
+            
+            // Check if session has expired
+            if (now > session.expiresAt) {
+                console.log('🔒 Admin session expired');
+                this.clearSession();
+                return false;
+            }
+            
+            // Extend session if it's valid and recent
+            if (now > session.expiresAt - (this.securityConfig.SESSION_TIMEOUT / 4)) {
+                this.extendSession();
+            }
+            
+            console.log('✅ Admin session valid');
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Invalid session data:', error);
+            this.clearSession();
+            return false;
+        }
+    }
+    
+    /**
+     * Show login interface
+     */
+    showLoginInterface() {
+        // Hide main admin content
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.display = 'none';
+        }
+        
+        // Create login interface
+        const loginHtml = `
+            <div id="admin-login" style="
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                display: flex; align-items: center; justify-content: center; z-index: 9999;
+            ">
+                <div style="
+                    background: white; padding: 40px; border-radius: 12px; 
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.3); max-width: 400px; width: 90%;
+                ">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h2 style="color: #1e3a8a; margin: 0 0 10px 0; font-size: 28px;">🔐 Admin Access</h2>
+                        <p style="color: #6b7280; margin: 0; font-size: 16px;">Enter your admin password to continue</p>
+                    </div>
+                    
+                    <div id="login-error" style="
+                        display: none; background: #fee2e2; border: 1px solid #fecaca; 
+                        color: #b91c1c; padding: 12px; border-radius: 6px; margin-bottom: 20px;
+                        font-size: 14px; text-align: center;
+                    "></div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label for="admin-password" style="
+                            display: block; margin-bottom: 8px; font-weight: 600; color: #374151;
+                        ">Password:</label>
+                        <input type="password" id="admin-password" placeholder="Enter admin password" style="
+                            width: 100%; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; 
+                            font-size: 16px; box-sizing: border-box;
+                        " />
+                    </div>
+                    
+                    <button id="admin-login-btn" style="
+                        width: 100%; background: #1e3a8a; color: white; border: none; 
+                        padding: 14px; border-radius: 6px; font-size: 16px; font-weight: 600; 
+                        cursor: pointer; transition: background 0.2s;
+                    " onmouseover="this.style.background='#1e40af'" 
+                       onmouseout="this.style.background='#1e3a8a'">
+                        🔓 Access Admin Panel
+                    </button>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <a href="index.html" style="color: #6b7280; text-decoration: none; font-size: 14px;">
+                            ← Back to Student Portal
+                        </a>
+                    </div>
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
+                            🛡️ Secure admin access • Session timeout: 4 hours
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', loginHtml);
+        
+        // Setup login event listeners
+        this.setupLoginEventListeners();
+    }
+    
+    /**
+     * Setup event listeners for login interface
+     */
+    setupLoginEventListeners() {
+        const passwordInput = document.getElementById('admin-password');
+        const loginBtn = document.getElementById('admin-login-btn');
+        
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.attemptLogin();
+                }
+            });
+            passwordInput.focus();
+        }
+        
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => this.attemptLogin());
+        }
+    }
+    
+    /**
+     * Attempt to log in with provided password
+     */
+    async attemptLogin() {
+        const passwordInput = document.getElementById('admin-password');
+        const loginBtn = document.getElementById('admin-login-btn');
+        const errorDiv = document.getElementById('login-error');
+        
+        if (!passwordInput || !loginBtn) return;
+        
+        const password = passwordInput.value.trim();
+        
+        if (!password) {
+            this.showLoginError('Please enter a password');
+            return;
+        }
+        
+        // Check rate limiting
+        if (!this.checkLoginRateLimit()) {
+            this.showLoginError('Too many failed attempts. Please wait 15 minutes.');
+            return;
+        }
+        
+        // Disable login button during attempt
+        loginBtn.disabled = true;
+        loginBtn.textContent = '🔄 Verifying...';
+        
+        try {
+            // Hash the password and compare
+            const passwordHash = await this.hashPassword(password);
+            
+            if (passwordHash === this.securityConfig.ADMIN_PASSWORD_HASH) {
+                // Successful login
+                this.createSession();
+                this.hideLoginInterface();
+                
+                // Initialize the admin panel
+                this.initializeAdmin();
+                this.setupEventListeners();
+                this.loadCurrentSession();
+                this.loadSettings();
+                
+                console.log('✅ Admin login successful');
+                
+            } else {
+                // Failed login
+                this.recordFailedLogin();
+                this.showLoginError('Invalid password. Please try again.');
+                console.log('❌ Admin login failed - invalid password');
+            }
+            
+        } catch (error) {
+            console.error('❌ Login error:', error);
+            this.showLoginError('Login error occurred. Please try again.');
+        }
+        
+        // Re-enable login button
+        loginBtn.disabled = false;
+        loginBtn.textContent = '🔓 Access Admin Panel';
+        passwordInput.value = '';
+    }
+    
+    /**
+     * Hash password using SHA-256
+     */
+    async hashPassword(password) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    
+    /**
+     * Check login rate limiting
+     */
+    checkLoginRateLimit() {
+        const attempts = JSON.parse(localStorage.getItem('admin_login_attempts') || '[]');
+        const now = Date.now();
+        
+        // Clean old attempts
+        const validAttempts = attempts.filter(time => now - time < this.securityConfig.LOCKOUT_DURATION);
+        
+        return validAttempts.length < this.securityConfig.MAX_LOGIN_ATTEMPTS;
+    }
+    
+    /**
+     * Record failed login attempt
+     */
+    recordFailedLogin() {
+        const attempts = JSON.parse(localStorage.getItem('admin_login_attempts') || '[]');
+        attempts.push(Date.now());
+        localStorage.setItem('admin_login_attempts', JSON.stringify(attempts));
+    }
+    
+    /**
+     * Show login error message
+     */
+    showLoginError(message) {
+        const errorDiv = document.getElementById('login-error');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+    }
+    
+    /**
+     * Create authenticated session
+     */
+    createSession() {
+        const now = Date.now();
+        const session = {
+            createdAt: now,
+            expiresAt: now + this.securityConfig.SESSION_TIMEOUT,
+            sessionId: this.generateSessionId()
+        };
+        
+        localStorage.setItem('admin_session', JSON.stringify(session));
+        
+        // Clear failed login attempts on successful login
+        localStorage.removeItem('admin_login_attempts');
+    }
+    
+    /**
+     * Extend current session
+     */
+    extendSession() {
+        const sessionData = localStorage.getItem('admin_session');
+        if (sessionData) {
+            const session = JSON.parse(sessionData);
+            session.expiresAt = Date.now() + this.securityConfig.SESSION_TIMEOUT;
+            localStorage.setItem('admin_session', JSON.stringify(session));
+            console.log('🔄 Admin session extended');
+        }
+    }
+    
+    /**
+     * Clear session and logout
+     */
+    clearSession() {
+        localStorage.removeItem('admin_session');
+        console.log('🔒 Admin session cleared');
+    }
+    
+    /**
+     * Generate unique session ID
+     */
+    generateSessionId() {
+        const array = new Uint8Array(16);
+        crypto.getRandomValues(array);
+        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+    
+    /**
+     * Hide login interface and show main content
+     */
+    hideLoginInterface() {
+        const loginDiv = document.getElementById('admin-login');
+        if (loginDiv) {
+            loginDiv.remove();
+        }
+        
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.display = 'block';
+        }
+    }
+    
+    /**
+     * Logout function
+     */
+    logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            this.clearSession();
+            window.location.reload();
+        }
+    }
+    
+    /**
+     * Start session monitoring for automatic logout
+     */
+    startSessionMonitoring() {
+        // Check session validity every minute
+        this.sessionMonitorInterval = setInterval(() => {
+            if (!this.checkAuthentication()) {
+                console.log('🔒 Session expired - redirecting to login');
+                this.clearSession();
+                window.location.reload();
+            }
+        }, 60000); // Check every minute
+        
+        console.log('🕐 Session monitoring started');
+    }
+    
+    /**
+     * Stop session monitoring
+     */
+    stopSessionMonitoring() {
+        if (this.sessionMonitorInterval) {
+            clearInterval(this.sessionMonitorInterval);
+            this.sessionMonitorInterval = null;
+            console.log('🛑 Session monitoring stopped');
+        }
     }
 }
 
