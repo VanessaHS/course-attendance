@@ -538,10 +538,23 @@ class AttendanceApp {
                 <p style="color: #1a237e; font-size: 18px; font-weight: 600; margin: 0 0 20px 0;">
                     Scan the QR code displayed at the front of the classroom
                 </p>
-                <button onclick="navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}}).then(stream => {alert('Camera ready! Point at QR code to scan'); stream.getTracks().forEach(track => track.stop());}).catch(err => alert('Camera not available: ' + err.message))" 
-                        style="background: #dc2626; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px;">
-                    📷 Open Camera to Scan QR Code
+                <button onclick="
+                    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+                        // iOS devices - open camera app directly
+                        window.location.href = 'https://qr-scanner.org';
+                    } else if (navigator.userAgent.includes('Android')) {
+                        // Android devices - try to open camera or QR scanner
+                        window.location.href = 'intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end';
+                    } else {
+                        // Fallback - open a web-based QR scanner
+                        window.open('https://qr.io/scan', '_blank');
+                    }
+                " style="background: #dc2626; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px;">
+                    📷 Open QR Scanner
                 </button>
+                <p style="color: #666; font-size: 12px; margin: 10px 0 0 0;">
+                    Or use your phone's built-in camera app to scan QR codes
+                </p>
             </div>
         `;
         
