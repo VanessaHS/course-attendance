@@ -530,11 +530,7 @@ class AttendanceApp {
                     </p>
                 </div>
                 
-                <div style="margin-top: 30px;">
-                    <button onclick="location.reload()" class="btn" style="background: #1a237e; color: white; padding: 12px 25px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
-                        Return to Check-In Page
-                    </button>
-                </div>
+
             </div>
         `;
         
@@ -571,19 +567,8 @@ class AttendanceApp {
             return;
         }
         
-        // Prevent immediate check-out (must wait at least 5 minutes after check-in)
-        const checkInTime = new Date(studentData.checkIn);
+        // No location or time verification required - relying on time-rotating codes for security
         const now = new Date();
-        const timeSinceCheckIn = now.getTime() - checkInTime.getTime();
-        const minStayTime = 5 * 60 * 1000; // 5 minutes
-        
-        if (timeSinceCheckIn < minStayTime) {
-            const remainingMinutes = Math.ceil((minStayTime - timeSinceCheckIn) / (1000 * 60));
-            this.showMessage(`Please wait ${remainingMinutes} more minute(s) before checking out to ensure you're attending class.`, 'error');
-            return;
-        }
-        
-        // No location verification required - relying on time-rotating codes for security
         
         // Record check-out
         attendanceData[dateKey][baseSessionCode].students[studentId].checkOut = now.toISOString();
