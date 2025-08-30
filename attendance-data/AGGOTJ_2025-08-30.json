@@ -11,6 +11,12 @@
       "checkOut": "2025-08-30T15:02:53.583Z",
       "device": "mobile",
       "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac"
+    },
+    "239644": {
+      "checkIn": "2025-08-30T15:04:40.472Z",
+      "checkOut": null,
+      "device": "mobile",
+      "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac"
     }
   }
 }
