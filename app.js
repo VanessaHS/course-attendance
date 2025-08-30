@@ -538,23 +538,22 @@ class AttendanceApp {
                 <p style="color: #1a237e; font-size: 18px; font-weight: 600; margin: 0 0 20px 0;">
                     Scan the QR code displayed at the front of the classroom
                 </p>
-                <button onclick="
-                    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
-                        // iOS devices - open camera app directly
-                        window.location.href = 'https://qr-scanner.org';
-                    } else if (navigator.userAgent.includes('Android')) {
-                        // Android devices - try to open camera or QR scanner
-                        window.location.href = 'intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;end';
-                    } else {
-                        // Fallback - open a web-based QR scanner
-                        window.open('https://qr.io/scan', '_blank');
-                    }
-                " style="background: #dc2626; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px;">
-                    📷 Open QR Scanner
-                </button>
-                <p style="color: #666; font-size: 12px; margin: 10px 0 0 0;">
-                    Or use your phone's built-in camera app to scan QR codes
-                </p>
+                <div style="margin-top: 15px;">
+                    <p style="color: #1a237e; font-size: 16px; font-weight: 600; margin-bottom: 15px;">
+                        📷 To scan the QR code:
+                    </p>
+                    <div style="background: rgba(26, 35, 126, 0.1); padding: 15px; border-radius: 8px; text-align: left;">
+                        <p style="color: #1a237e; margin: 8px 0; font-size: 14px;">
+                            <strong>iPhone/iPad:</strong> Open Camera app → Point at QR code
+                        </p>
+                        <p style="color: #1a237e; margin: 8px 0; font-size: 14px;">
+                            <strong>Android:</strong> Open Camera app → Tap QR code icon
+                        </p>
+                        <p style="color: #1a237e; margin: 8px 0; font-size: 14px;">
+                            <strong>Any device:</strong> Use any QR scanner app
+                        </p>
+                    </div>
+                </div>
             </div>
         `;
         
