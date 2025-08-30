@@ -307,12 +307,15 @@ class AttendanceApp {
             console.log('Provided rotation code:', providedRotationCode);
             
             if (isCheckOut) {
-                // For check-out, require current time slot (stricter validation)
-                if (providedRotationCode !== currentRotationCode) {
+                // For check-out, allow current and previous time slot (more forgiving)
+                const candidate = providedRotationCode || sessionCode;
+                if (candidate !== currentRotationCode && candidate !== previousRotationCode) {
                     console.log('ERROR: Check-out code validation failed');
+                    console.log('Check-out code not current or previous');
                     this.showMessage('Check-out code has expired. Please scan the current QR code displayed in class.', 'error');
                     return false;
                 }
+                console.log('✅ Check-out code validation passed (current or previous slot)');
             } else {
                 // MOBILE FIX: For check-in, allow current, previous, OR next time slot (more tolerant)
                 const candidate = providedRotationCode || sessionCode; // allow pure 6-char code
